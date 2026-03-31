@@ -8,30 +8,36 @@
   .hidden { display: none; }
   button { padding: 10px 15px; margin: 5px; cursor: pointer; }
   .section { margin-bottom: 20px; }
+  #open-tables { margin-top: 20px; }
 </style>
 </head>
 <body>
 
 <h1>Система заказов для официанта</h1>
 
-<!-- Этап 1: Выбор столика -->
-<div id="table-selection" class="section">
+<!-- Главный экран: выбор столика и панель открытых столов -->
+<div id="main-screen" class="section">
   <h2>Выберите столик</h2>
   <button onclick="openTable('Стол 1')">Стол 1</button>
   <button onclick="openTable('Стол 2')">Стол 2</button>
   <button onclick="openTable('Стол 3')">Стол 3</button>
+
+  <div id="open-tables">
+    <h3>Открытые столы:</h3>
+    <div id="open-tables-buttons"></div>
+  </div>
 </div>
 
-<!-- Этап 2: Выбор категории -->
+<!-- Выбор категории -->
 <div id="category-selection" class="section hidden">
   <h2>Выберите категорию напитков</h2>
   <button onclick="openCategory('Алкогольные напитки')">Алкогольные напитки</button>
   <button onclick="openCategory('Безалкогольные напитки')">Безалкогольные напитки</button>
   <br><br>
-  <button onclick="goBackToTables()">Назад к столам</button>
+  <button onclick="goBackToMain()">Назад к столам</button>
 </div>
 
-<!-- Этап 3: Выбор напитка -->
+<!-- Выбор напитка -->
 <div id="drink-selection" class="section hidden">
   <h2 id="category-title"></h2>
   <div id="drink-buttons"></div>
@@ -39,7 +45,7 @@
   <button onclick="goBackToCategories()">Назад к категориям</button>
 </div>
 
-<!-- Этап 4: Выбор количества -->
+<!-- Выбор количества -->
 <div id="quantity-selection" class="section hidden">
   <h2 id="drink-title"></h2>
   <label>Количество: <input type="number" id="drink-quantity" value="1" min="1"></label>
@@ -48,12 +54,12 @@
   <button onclick="goBackToDrinks()">Назад к напиткам</button>
 </div>
 
-<!-- Этап 5: Просмотр заказа -->
+<!-- Просмотр текущего заказа -->
 <div id="current-order" class="section hidden">
   <h2>Текущий заказ для <span id="current-table"></span></h2>
   <ul id="order-list"></ul>
   <button onclick="closeTable()">Закрыть столик</button>
-  <button onclick="goBackToCategories()">Добавить ещё</button>
+  <button onclick="goBackToMain()">Назад к столам</button>
 </div>
 
 <script>
@@ -67,20 +73,51 @@ const drinksData = {
   'Безалкогольные напитки': ['Сок', 'Вода', 'Лимонад']
 };
 
+// Открыть стол для заказа
 function openTable(table) {
   currentTable = table;
   if(!orders[currentTable]) orders[currentTable] = [];
-  document.getElementById('table-selection').classList.add('hidden');
+  document.getElementById('main-screen').classList.add('hidden');
   document.getElementById('category-selection').classList.remove('hidden');
+  updateOpenTables();
   updateOrderView();
 }
 
-function goBackToTables() {
-  currentTable = '';
+// Назад к главному экрану
+function goBackToMain() {
+  currentCategory = '';
+  currentDrink = '';
   document.getElementById('category-selection').classList.add('hidden');
-  document.getElementById('table-selection').classList.remove('hidden');
+  document.getElementById('drink-selection').classList.add('hidden');
+  document.getElementById('quantity-selection').classList.add('hidden');
+  document.getElementById('current-order').classList.add('hidden');
+  document.getElementById('main-screen').classList.remove('hidden');
+  updateOpenTables();
 }
 
+// Панель открытых столов
+function updateOpenTables() {
+  const container = document.getElementById('open-tables-buttons');
+  container.innerHTML = '';
+  for (let table in orders) {
+    if (orders[table].length > 0) {
+      const btn = document.createElement('button');
+      btn.innerText = table;
+      btn.onclick = () => viewOrder(table);
+      container.appendChild(btn);
+    }
+  }
+}
+
+// Просмотр заказа конкретного столика
+function viewOrder(table) {
+  currentTable = table;
+  document.getElementById('main-screen').classList.add('hidden');
+  document.getElementById('current-order').classList.remove('hidden');
+  updateOrderView();
+}
+
+// Выбор категории
 function openCategory(category) {
   currentCategory = category;
   document.getElementById('category-selection').classList.add('hidden');
@@ -97,12 +134,14 @@ function openCategory(category) {
   });
 }
 
+// Назад к категориям
 function goBackToCategories() {
   document.getElementById('drink-selection').classList.add('hidden');
   document.getElementById('quantity-selection').classList.add('hidden');
   document.getElementById('category-selection').classList.remove('hidden');
 }
 
+// Выбор напитка
 function selectDrink(drink) {
   currentDrink = drink;
   document.getElementById('drink-selection').classList.add('hidden');
@@ -111,19 +150,23 @@ function selectDrink(drink) {
   document.getElementById('drink-quantity').value = 1;
 }
 
+// Назад к напиткам
 function goBackToDrinks() {
   document.getElementById('quantity-selection').classList.add('hidden');
   document.getElementById('drink-selection').classList.remove('hidden');
 }
 
+// Сохранить выбранный напиток
 function saveDrink() {
   const quantity = parseInt(document.getElementById('drink-quantity').value);
   orders[currentTable].push({drink: currentDrink, quantity});
   document.getElementById('quantity-selection').classList.add('hidden');
   document.getElementById('current-order').classList.remove('hidden');
   updateOrderView();
+  updateOpenTables();
 }
 
+// Обновление отображения заказа
 function updateOrderView() {
   document.getElementById('current-table').innerText = currentTable;
   const list = document.getElementById('order-list');
@@ -135,11 +178,14 @@ function updateOrderView() {
   });
 }
 
+// Закрыть столик
 function closeTable() {
-  alert(`Заказ для ${currentTable} сохранён!\nДанные можно отправить в Google Sheets позже.`);
+  alert(`Заказ для ${currentTable} сохранён!`);
   delete orders[currentTable];
+  currentTable = '';
   document.getElementById('current-order').classList.add('hidden');
-  document.getElementById('table-selection').classList.remove('hidden');
+  document.getElementById('main-screen').classList.remove('hidden');
+  updateOpenTables();
 }
 </script>
 

@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<title>Сайт для официанта</title>
+<style>
+  body { font-family: Arial; background: #f8f8f8; margin:0; padding:20px; }
+  .screen { display:none; }
+  .active { display:block; }
+  h2 { margin-top:0; }
+  .tables button { 
+    width:120px; height:80px; margin:10px; font-size:20px; 
+    border-radius:12px; border:none; background:#4CAF50; color:white; cursor:pointer; 
+  }
+  .menu-item { display:flex; justify-content:space-between; align-items:center; 
+    padding:10px; background:white; margin-bottom:10px; border-radius:8px; }
+  .menu-item span { font-size:18px; }
+  .counter { display:flex; align-items:center; gap:10px; }
+  .counter button { width:40px; height:40px; font-size:20px; border-radius:6px; border:none; background:#2196F3; color:white; cursor:pointer; }
+  .counter input { width:50px; text-align:center; font-size:18px; border-radius:6px; border:1px solid #ccc; }
+  .close-btn { margin-top:20px; width:100%; padding:15px; font-size:20px; background:#f44336; color:white; border:none; border-radius:10px; cursor:pointer; }
+</style>
+</head>
+<body>
+
+<!-- Логин -->
+<div id="login" class="screen active">
+  <h2>Вход официанта</h2>
+  <input id="username" placeholder="Имя" style="font-size:18px; padding:8px; margin-bottom:10px; width:200px;" />
+  <input id="password" type="password" placeholder="Пароль" style="font-size:18px; padding:8px; margin-bottom:10px; width:200px;" />
+  <br>
+  <button onclick="login()" style="font-size:18px; padding:10px 20px; cursor:pointer;">Войти</button>
+</div>
+
+<!-- Выбор стола -->
+<div id="tables" class="screen">
+  <h2>Выберите стол</h2>
+  <div class="tables">
+    <button onclick="openTable(1)">Стол 1</button>
+    <button onclick="openTable(2)">Стол 2</button>
+    <button onclick="openTable(3)">Стол 3</button>
+    <button onclick="openTable(4)">Стол 4</button>
+  </div>
+</div>
+
+<!-- Меню -->
+<div id="menu" class="screen">
+  <h2>Меню - Стол <span id="currentTable"></span></h2>
+  <div id="menu-items"></div>
+  <button class="close-btn" onclick="closeOrder()">Закрыть заказ</button>
+</div>
+
+<script>
+let currentTable;
+const menuItems = [
+  { name: 'Салат', price: 5 },
+  { name: 'Суп', price: 3 },
+  { name: 'Стейк', price: 10 },
+  { name: 'Напиток', price: 2 },
+  { name: 'Десерт', price: 4 }
+];
+let order = [];
+
+// Логин (для демонстрации любой ввод проходит)
+function login() {
+  const username = document.getElementById('username').value;
+  const password = document.getElementById('password').value;
+  if(username && password) {
+    document.getElementById('login').classList.remove('active');
+    document.getElementById('tables').classList.add('active');
+  } else alert('Введите имя и пароль');
+}
+
+// Выбор стола
+function openTable(table){
+  currentTable = table;
+  document.getElementById('currentTable').innerText = table;
+  document.getElementById('tables').classList.remove('active');
+  document.getElementById('menu').classList.add('active');
+  renderMenu();
+}
+
+// Рендер меню
+function renderMenu(){
+  const container = document.getElementById('menu-items');
+  container.innerHTML = '';
+  menuItems.forEach(item=>{
+    const div = document.createElement('div');
+    div.className = 'menu-item';
+    div.innerHTML = `
+      <span>${item.name} - $${item.price}</span>
+      <div class="counter">
+        <button onclick="updateOrder('${item.name}', -1)">−</button>
+        <input type="number" value="0" min="0" id="count-${item.name}" readonly>
+        <button onclick="updateOrder('${item.name}', 1)">+</button>
+      </div>
+    `;
+    container.appendChild(div);
+  });
+}
+
+// Изменение количества
+function updateOrder(itemName, delta){
+  const input = document.getElementById(`count-${itemName}`);
+  let val = parseInt(input.value) + delta;
+  if(val < 0) val = 0;
+  input.value = val;
+
+  const index = order.findIndex(o=>o.item===itemName);
+  if(index >= 0) {
+    order[index].quantity = val;
+  } else {
+    order.push({item: itemName, quantity: val});
+  }
+  // Фильтруем нули
+  order = order.filter(o=>o.quantity>0);
+}
+
+// Закрытие заказа
+function closeOrder(){
+  if(order.length===0){ alert('Добавьте хотя бы одну позицию'); return; }
+  if(!confirm('Закрыть заказ?')) return;
+
+  console.log(`Заказ со стола ${currentTable}:`, order);
+  alert('Заказ сохранён (сейчас только в консоли браузера)');
+
+  order = [];
+  // Сброс счётчиков
+  menuItems.forEach(item=>{
+    document.getElementById(`count-${item.name}`).value = 0;
+  });
+  document.getElementById('menu').classList.remove('active');
+  document.getElementById('tables').classList.add('active');
+}
+</script>
+</body>
+</html>

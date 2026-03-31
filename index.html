@@ -1,0 +1,153 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
+<html>
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+  <meta http-equiv="Content-Style-Type" content="text/css">
+  <title></title>
+  <meta name="Generator" content="Cocoa HTML Writer">
+  <meta name="CocoaVersion" content="2685.2">
+  <style type="text/css">
+    p.p1 {margin: 0.0px 0.0px 0.0px 0.0px; font: 12.0px Helvetica}
+    p.p2 {margin: 0.0px 0.0px 0.0px 0.0px; font: 12.0px Helvetica; min-height: 14.0px}
+  </style>
+</head>
+<body>
+<p class="p1">&lt;!DOCTYPE html&gt;</p>
+<p class="p1">&lt;html lang="ru"&gt;</p>
+<p class="p1">&lt;head&gt;</p>
+<p class="p1">&lt;meta charset="UTF-8"&gt;</p>
+<p class="p1">&lt;title&gt;Сайт для официанта&lt;/title&gt;</p>
+<p class="p1">&lt;style&gt;</p>
+<p class="p1"><span class="Apple-converted-space">  </span>body { font-family: Arial; background: #f8f8f8; margin:0; padding:20px; }</p>
+<p class="p1"><span class="Apple-converted-space">  </span>.screen { display:none; }</p>
+<p class="p1"><span class="Apple-converted-space">  </span>.active { display:block; }</p>
+<p class="p1"><span class="Apple-converted-space">  </span>h2 { margin-top:0; }</p>
+<p class="p1"><span class="Apple-converted-space">  </span>.tables button {<span class="Apple-converted-space"> </span></p>
+<p class="p1"><span class="Apple-converted-space">    </span>width:120px; height:80px; margin:10px; font-size:20px;<span class="Apple-converted-space"> </span></p>
+<p class="p1"><span class="Apple-converted-space">    </span>border-radius:12px; border:none; background:#4CAF50; color:white; cursor:pointer;<span class="Apple-converted-space"> </span></p>
+<p class="p1"><span class="Apple-converted-space">  </span>}</p>
+<p class="p1"><span class="Apple-converted-space">  </span>.menu-item { display:flex; justify-content:space-between; align-items:center;<span class="Apple-converted-space"> </span></p>
+<p class="p1"><span class="Apple-converted-space">    </span>padding:10px; background:white; margin-bottom:10px; border-radius:8px; }</p>
+<p class="p1"><span class="Apple-converted-space">  </span>.menu-item span { font-size:18px; }</p>
+<p class="p1"><span class="Apple-converted-space">  </span>.counter { display:flex; align-items:center; gap:10px; }</p>
+<p class="p1"><span class="Apple-converted-space">  </span>.counter button { width:40px; height:40px; font-size:20px; border-radius:6px; border:none; background:#2196F3; color:white; cursor:pointer; }</p>
+<p class="p1"><span class="Apple-converted-space">  </span>.counter input { width:50px; text-align:center; font-size:18px; border-radius:6px; border:1px solid #ccc; }</p>
+<p class="p1"><span class="Apple-converted-space">  </span>.close-btn { margin-top:20px; width:100%; padding:15px; font-size:20px; background:#f44336; color:white; border:none; border-radius:10px; cursor:pointer; }</p>
+<p class="p1">&lt;/style&gt;</p>
+<p class="p1">&lt;/head&gt;</p>
+<p class="p1">&lt;body&gt;</p>
+<p class="p2"><br></p>
+<p class="p1">&lt;!-- Логин --&gt;</p>
+<p class="p1">&lt;div id="login" class="screen active"&gt;</p>
+<p class="p1"><span class="Apple-converted-space">  </span>&lt;h2&gt;Вход официанта&lt;/h2&gt;</p>
+<p class="p1"><span class="Apple-converted-space">  </span>&lt;input id="username" placeholder="Имя" style="font-size:18px; padding:8px; margin-bottom:10px; width:200px;" /&gt;</p>
+<p class="p1"><span class="Apple-converted-space">  </span>&lt;input id="password" type="password" placeholder="Пароль" style="font-size:18px; padding:8px; margin-bottom:10px; width:200px;" /&gt;</p>
+<p class="p1"><span class="Apple-converted-space">  </span>&lt;br&gt;</p>
+<p class="p1"><span class="Apple-converted-space">  </span>&lt;button onclick="login()" style="font-size:18px; padding:10px 20px; cursor:pointer;"&gt;Войти&lt;/button&gt;</p>
+<p class="p1">&lt;/div&gt;</p>
+<p class="p2"><br></p>
+<p class="p1">&lt;!-- Выбор стола --&gt;</p>
+<p class="p1">&lt;div id="tables" class="screen"&gt;</p>
+<p class="p1"><span class="Apple-converted-space">  </span>&lt;h2&gt;Выберите стол&lt;/h2&gt;</p>
+<p class="p1"><span class="Apple-converted-space">  </span>&lt;div class="tables"&gt;</p>
+<p class="p1"><span class="Apple-converted-space">    </span>&lt;button onclick="openTable(1)"&gt;Стол 1&lt;/button&gt;</p>
+<p class="p1"><span class="Apple-converted-space">    </span>&lt;button onclick="openTable(2)"&gt;Стол 2&lt;/button&gt;</p>
+<p class="p1"><span class="Apple-converted-space">    </span>&lt;button onclick="openTable(3)"&gt;Стол 3&lt;/button&gt;</p>
+<p class="p1"><span class="Apple-converted-space">    </span>&lt;button onclick="openTable(4)"&gt;Стол 4&lt;/button&gt;</p>
+<p class="p1"><span class="Apple-converted-space">  </span>&lt;/div&gt;</p>
+<p class="p1">&lt;/div&gt;</p>
+<p class="p2"><br></p>
+<p class="p1">&lt;!-- Меню --&gt;</p>
+<p class="p1">&lt;div id="menu" class="screen"&gt;</p>
+<p class="p1"><span class="Apple-converted-space">  </span>&lt;h2&gt;Меню - Стол &lt;span id="currentTable"&gt;&lt;/span&gt;&lt;/h2&gt;</p>
+<p class="p1"><span class="Apple-converted-space">  </span>&lt;div id="menu-items"&gt;&lt;/div&gt;</p>
+<p class="p1"><span class="Apple-converted-space">  </span>&lt;button class="close-btn" onclick="closeOrder()"&gt;Закрыть заказ&lt;/button&gt;</p>
+<p class="p1">&lt;/div&gt;</p>
+<p class="p2"><br></p>
+<p class="p1">&lt;script&gt;</p>
+<p class="p1">let currentTable;</p>
+<p class="p1">const menuItems = [</p>
+<p class="p1"><span class="Apple-converted-space">  </span>{ name: 'Салат', price: 5 },</p>
+<p class="p1"><span class="Apple-converted-space">  </span>{ name: 'Суп', price: 3 },</p>
+<p class="p1"><span class="Apple-converted-space">  </span>{ name: 'Стейк', price: 10 },</p>
+<p class="p1"><span class="Apple-converted-space">  </span>{ name: 'Напиток', price: 2 },</p>
+<p class="p1"><span class="Apple-converted-space">  </span>{ name: 'Десерт', price: 4 }</p>
+<p class="p1">];</p>
+<p class="p1">let order = [];</p>
+<p class="p2"><br></p>
+<p class="p1">// Логин (для демонстрации любой ввод проходит)</p>
+<p class="p1">function login() {</p>
+<p class="p1"><span class="Apple-converted-space">  </span>const username = document.getElementById('username').value;</p>
+<p class="p1"><span class="Apple-converted-space">  </span>const password = document.getElementById('password').value;</p>
+<p class="p1"><span class="Apple-converted-space">  </span>if(username &amp;&amp; password) {</p>
+<p class="p1"><span class="Apple-converted-space">    </span>document.getElementById('login').classList.remove('active');</p>
+<p class="p1"><span class="Apple-converted-space">    </span>document.getElementById('tables').classList.add('active');</p>
+<p class="p1"><span class="Apple-converted-space">  </span>} else alert('Введите имя и пароль');</p>
+<p class="p1">}</p>
+<p class="p2"><br></p>
+<p class="p1">// Выбор стола</p>
+<p class="p1">function openTable(table){</p>
+<p class="p1"><span class="Apple-converted-space">  </span>currentTable = table;</p>
+<p class="p1"><span class="Apple-converted-space">  </span>document.getElementById('currentTable').innerText = table;</p>
+<p class="p1"><span class="Apple-converted-space">  </span>document.getElementById('tables').classList.remove('active');</p>
+<p class="p1"><span class="Apple-converted-space">  </span>document.getElementById('menu').classList.add('active');</p>
+<p class="p1"><span class="Apple-converted-space">  </span>renderMenu();</p>
+<p class="p1">}</p>
+<p class="p2"><br></p>
+<p class="p1">// Рендер меню</p>
+<p class="p1">function renderMenu(){</p>
+<p class="p1"><span class="Apple-converted-space">  </span>const container = document.getElementById('menu-items');</p>
+<p class="p1"><span class="Apple-converted-space">  </span>container.innerHTML = '';</p>
+<p class="p1"><span class="Apple-converted-space">  </span>menuItems.forEach(item=&gt;{</p>
+<p class="p1"><span class="Apple-converted-space">    </span>const div = document.createElement('div');</p>
+<p class="p1"><span class="Apple-converted-space">    </span>div.className = 'menu-item';</p>
+<p class="p1"><span class="Apple-converted-space">    </span>div.innerHTML = `</p>
+<p class="p1"><span class="Apple-converted-space">      </span>&lt;span&gt;${item.name} - $${item.price}&lt;/span&gt;</p>
+<p class="p1"><span class="Apple-converted-space">      </span>&lt;div class="counter"&gt;</p>
+<p class="p1"><span class="Apple-converted-space">        </span>&lt;button onclick="updateOrder('${item.name}', -1)"&gt;−&lt;/button&gt;</p>
+<p class="p1"><span class="Apple-converted-space">        </span>&lt;input type="number" value="0" min="0" id="count-${item.name}" readonly&gt;</p>
+<p class="p1"><span class="Apple-converted-space">        </span>&lt;button onclick="updateOrder('${item.name}', 1)"&gt;+&lt;/button&gt;</p>
+<p class="p1"><span class="Apple-converted-space">      </span>&lt;/div&gt;</p>
+<p class="p1"><span class="Apple-converted-space">    </span>`;</p>
+<p class="p1"><span class="Apple-converted-space">    </span>container.appendChild(div);</p>
+<p class="p1"><span class="Apple-converted-space">  </span>});</p>
+<p class="p1">}</p>
+<p class="p2"><br></p>
+<p class="p1">// Изменение количества</p>
+<p class="p1">function updateOrder(itemName, delta){</p>
+<p class="p1"><span class="Apple-converted-space">  </span>const input = document.getElementById(`count-${itemName}`);</p>
+<p class="p1"><span class="Apple-converted-space">  </span>let val = parseInt(input.value) + delta;</p>
+<p class="p1"><span class="Apple-converted-space">  </span>if(val &lt; 0) val = 0;</p>
+<p class="p1"><span class="Apple-converted-space">  </span>input.value = val;</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">  </span>const index = order.findIndex(o=&gt;o.item===itemName);</p>
+<p class="p1"><span class="Apple-converted-space">  </span>if(index &gt;= 0) {</p>
+<p class="p1"><span class="Apple-converted-space">    </span>order[index].quantity = val;</p>
+<p class="p1"><span class="Apple-converted-space">  </span>} else {</p>
+<p class="p1"><span class="Apple-converted-space">    </span>order.push({item: itemName, quantity: val});</p>
+<p class="p1"><span class="Apple-converted-space">  </span>}</p>
+<p class="p1"><span class="Apple-converted-space">  </span>// Фильтруем нули</p>
+<p class="p1"><span class="Apple-converted-space">  </span>order = order.filter(o=&gt;o.quantity&gt;0);</p>
+<p class="p1">}</p>
+<p class="p2"><br></p>
+<p class="p1">// Закрытие заказа</p>
+<p class="p1">function closeOrder(){</p>
+<p class="p1"><span class="Apple-converted-space">  </span>if(order.length===0){ alert('Добавьте хотя бы одну позицию'); return; }</p>
+<p class="p1"><span class="Apple-converted-space">  </span>if(!confirm('Закрыть заказ?')) return;</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">  </span>console.log(`Заказ со стола ${currentTable}:`, order);</p>
+<p class="p1"><span class="Apple-converted-space">  </span>alert('Заказ сохранён (сейчас только в консоли браузера)');</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">  </span>order = [];</p>
+<p class="p1"><span class="Apple-converted-space">  </span>// Сброс счётчиков</p>
+<p class="p1"><span class="Apple-converted-space">  </span>menuItems.forEach(item=&gt;{</p>
+<p class="p1"><span class="Apple-converted-space">    </span>document.getElementById(`count-${item.name}`).value = 0;</p>
+<p class="p1"><span class="Apple-converted-space">  </span>});</p>
+<p class="p1"><span class="Apple-converted-space">  </span>document.getElementById('menu').classList.remove('active');</p>
+<p class="p1"><span class="Apple-converted-space">  </span>document.getElementById('tables').classList.add('active');</p>
+<p class="p1">}</p>
+<p class="p1">&lt;/script&gt;</p>
+<p class="p1">&lt;/body&gt;</p>
+<p class="p1">&lt;/html&gt;</p>
+</body>
+</html>

@@ -2,7 +2,7 @@
 <html lang="ru">
 <head>
 <meta charset="UTF-8">
-<title>Официант</title>
+<title>Система заказов для официанта</title>
 <style>
   body { font-family: Arial, sans-serif; padding: 20px; }
   .hidden { display: none; }
@@ -45,12 +45,11 @@
   <button onclick="goBackToCategories()">Назад к категориям</button>
 </div>
 
-<!-- Выбор количества -->
+<!-- Выбор количества через кнопки 1-5 -->
 <div id="quantity-selection" class="section hidden">
   <h2 id="drink-title"></h2>
-  <label>Количество: <input type="number" id="drink-quantity" value="1" min="1"></label>
-  <br><br>
-  <button onclick="saveDrink()">Сохранить</button>
+  <div id="quantity-buttons"></div>
+  <br>
   <button onclick="goBackToDrinks()">Назад к напиткам</button>
 </div>
 
@@ -73,7 +72,7 @@ const drinksData = {
   'Безалкогольные напитки': ['Сок', 'Вода', 'Лимонад']
 };
 
-// Открыть стол для заказа
+// Открыть стол
 function openTable(table) {
   currentTable = table;
   if(!orders[currentTable]) orders[currentTable] = [];
@@ -147,7 +146,16 @@ function selectDrink(drink) {
   document.getElementById('drink-selection').classList.add('hidden');
   document.getElementById('quantity-selection').classList.remove('hidden');
   document.getElementById('drink-title').innerText = drink;
-  document.getElementById('drink-quantity').value = 1;
+
+  // Кнопки 1-5
+  const container = document.getElementById('quantity-buttons');
+  container.innerHTML = '';
+  for(let i=1; i<=5; i++){
+    const btn = document.createElement('button');
+    btn.innerText = i;
+    btn.onclick = () => saveDrink(i);
+    container.appendChild(btn);
+  }
 }
 
 // Назад к напиткам
@@ -156,9 +164,8 @@ function goBackToDrinks() {
   document.getElementById('drink-selection').classList.remove('hidden');
 }
 
-// Сохранить выбранный напиток
-function saveDrink() {
-  const quantity = parseInt(document.getElementById('drink-quantity').value);
+// Сохраняем напиток с выбранным количеством
+function saveDrink(quantity) {
   orders[currentTable].push({drink: currentDrink, quantity});
   document.getElementById('quantity-selection').classList.add('hidden');
   document.getElementById('current-order').classList.remove('hidden');
@@ -166,14 +173,26 @@ function saveDrink() {
   updateOpenTables();
 }
 
-// Обновление отображения заказа
+// Обновление отображения заказа с кнопками удаления
 function updateOrderView() {
   document.getElementById('current-table').innerText = currentTable;
   const list = document.getElementById('order-list');
   list.innerHTML = '';
-  orders[currentTable].forEach(item => {
+
+  orders[currentTable].forEach((item, index) => {
     const li = document.createElement('li');
-    li.innerText = `${item.drink} — ${item.quantity}`;
+    li.innerText = `${item.drink} — ${item.quantity} `;
+
+    const delBtn = document.createElement('button');
+    delBtn.innerText = '❌ Удалить';
+    delBtn.style.marginLeft = '10px';
+    delBtn.onclick = () => {
+      orders[currentTable].splice(index, 1);
+      updateOrderView();
+      updateOpenTables();
+    };
+
+    li.appendChild(delBtn);
     list.appendChild(li);
   });
 }

@@ -5,9 +5,9 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Сайт для официанта</title>
 <style>
-  body { font-family: Arial, sans-serif; margin: 0; padding: 0; background: #f4f4f9; display: flex; }
+  body { font-family: Arial, sans-serif; margin: 0; padding: 0; background: #f4f4f9; }
   .hidden { display: none; }
-  .container { padding: 20px; max-width: 600px; margin: auto; flex-grow: 1; }
+  .container { padding: 20px; max-width: 600px; margin: auto; }
   h2, h3 { text-align: center; }
   .panel { border: 1px solid #ccc; border-radius: 10px; background: #fff; padding: 15px; margin: 15px 0; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
   .tables { display: flex; flex-wrap: wrap; justify-content: center; gap: 10px; }
@@ -19,12 +19,17 @@
   button { outline: none; }
 
   /* Фиксированная панель открытых столов */
-  #fixed-open-tables { position: fixed; right: 0; top: 0; width: 200px; height: 100vh; background: #fff; border-left: 1px solid #ccc; box-shadow: -2px 0 5px rgba(0,0,0,0.1); padding: 10px; overflow-y: auto; }
+  #fixed-open-tables { 
+    position: fixed; right: 0; top: 0; width: 200px; height: 100vh; 
+    background: #fff; border-left: 1px solid #ccc; box-shadow: -2px 0 5px rgba(0,0,0,0.1); 
+    padding: 10px; overflow-y: auto; 
+  }
   #fixed-open-tables h3 { text-align: center; margin-top: 0; }
   #fixed-open-tables .open-tables { flex-direction: column; }
 
-  /* Адаптация контента при наличии боковой панели */
-  .content-with-sidebar { margin-right: 210px; }
+  /* Основной контент рядом с боковой панелью */
+  .content-wrapper { display: flex; }
+  .content-with-sidebar { margin-right: 210px; flex-grow: 1; }
 </style>
 </head>
 <body>
@@ -35,38 +40,40 @@
   <button onclick="login()">Войти</button>
 </div>
 
-<div id="main-page" class="container hidden content-with-sidebar">
-  <h2>Добро пожаловать, <span id="user-name"></span></h2>
-
-  <div class="panel">
-    <h3>Столы</h3>
-    <div class="tables" id="tables-panel"></div>
+<!-- Основной контент сайта с боковой панелью -->
+<div class="content-wrapper hidden" id="main-wrapper">
+  <div id="main-page" class="container content-with-sidebar">
+    <h2>Добро пожаловать, <span id="user-name"></span></h2>
+    <div class="panel">
+      <h3>Столы</h3>
+      <div class="tables" id="tables-panel"></div>
+    </div>
   </div>
-</div>
 
-<!-- Фиксированная панель открытых столов -->
-<div id="fixed-open-tables" class="hidden">
-  <h3>Открытые столы</h3>
-  <div class="open-tables" id="open-tables-panel"></div>
-</div>
-
-<div id="menu-page" class="container hidden content-with-sidebar">
-  <h2 id="menu-table-title"></h2>
-  <div style="display:flex; justify-content:center; gap:15px; margin-bottom:15px;">
-    <button onclick="chooseCategory('Безалкогольные напитки')">Безалкогольные напитки</button>
-    <button onclick="chooseCategory('Алкогольные напитки')">Алкогольные напитки</button>
+  <div id="menu-page" class="container hidden content-with-sidebar">
+    <h2 id="menu-table-title"></h2>
+    <div style="display:flex; justify-content:center; gap:15px; margin-bottom:15px;">
+      <button onclick="chooseCategory('Безалкогольные напитки')">Безалкогольные напитки</button>
+      <button onclick="chooseCategory('Алкогольные напитки')">Алкогольные напитки</button>
+    </div>
+    <div id="menu-items"></div>
+    <div style="text-align:center; margin-top:15px;"><button onclick="backToTables()">Вернуться к столикам</button></div>
   </div>
-  <div id="menu-items"></div>
-  <div style="text-align:center; margin-top:15px;"><button onclick="backToTables()">Вернуться к столикам</button></div>
-</div>
 
-<div id="open-table-page" class="container hidden content-with-sidebar">
-  <h2 id="open-table-title"></h2>
-  <div id="open-table-items"></div>
-  <div style="display:flex; justify-content:center; gap:10px; margin-top:15px;">
-    <button onclick="saveTable()">Сохранить</button>
-    <button onclick="closeTable()">Закрыть стол</button>
-    <button onclick="backToMainTables()">Вернуться к столикам</button>
+  <div id="open-table-page" class="container hidden content-with-sidebar">
+    <h2 id="open-table-title"></h2>
+    <div id="open-table-items"></div>
+    <div style="display:flex; justify-content:center; gap:10px; margin-top:15px;">
+      <button onclick="saveTable()">Сохранить</button>
+      <button onclick="closeTable()">Закрыть стол</button>
+      <button onclick="backToMainTables()">Вернуться к столикам</button>
+    </div>
+  </div>
+
+  <!-- Фиксированная панель открытых столов -->
+  <div id="fixed-open-tables" class="hidden">
+    <h3>Открытые столы</h3>
+    <div class="open-tables" id="open-tables-panel"></div>
   </div>
 </div>
 
@@ -86,7 +93,7 @@ function login() {
   currentUser = username;
   document.getElementById('user-name').textContent = username;
   document.getElementById('login-page').classList.add('hidden');
-  document.getElementById('main-page').classList.remove('hidden');
+  document.getElementById('main-wrapper').classList.remove('hidden');
   document.getElementById('fixed-open-tables').classList.remove('hidden');
   renderTables();
   renderOpenTables();
@@ -98,3 +105,118 @@ function renderTables() {
   tables.forEach(table => {
     const btn = document.createElement('button');
     btn.textContent = table;
+    btn.onclick = () => openMenu(table);
+    panel.appendChild(btn);
+  });
+}
+
+function renderOpenTables() {
+  const panel = document.getElementById('open-tables-panel');
+  panel.innerHTML = '';
+  for (const table in openTables) {
+    const btn = document.createElement('button');
+    btn.textContent = table;
+    btn.onclick = () => openOpenTable(table);
+    panel.appendChild(btn);
+  }
+}
+
+function openMenu(table) {
+  currentTable = table;
+  document.getElementById('main-page').classList.add('hidden');
+  document.getElementById('menu-page').classList.remove('hidden');
+  document.getElementById('menu-table-title').textContent = `Меню для ${table}`;
+  document.getElementById('menu-items').innerHTML = '';
+}
+
+function chooseCategory(category) {
+  const itemsDiv = document.getElementById('menu-items');
+  itemsDiv.innerHTML = '';
+  menuData[category].forEach(item => {
+    const div = document.createElement('div');
+    div.className = 'menu-item';
+    div.textContent = item;
+    const btnContainer = document.createElement('div');
+    for (let i = 1; i <= 5; i++) {
+      const btn = document.createElement('button');
+      btn.textContent = i;
+      btn.onclick = () => addItemToTable(item, i);
+      btnContainer.appendChild(btn);
+    }
+    div.appendChild(btnContainer);
+    itemsDiv.appendChild(div);
+  });
+}
+
+function addItemToTable(item, quantity) {
+  if (!openTables[currentTable]) openTables[currentTable] = {};
+  openTables[currentTable][item] = quantity;
+  renderOpenTables();
+}
+
+function backToTables() {
+  document.getElementById('menu-page').classList.add('hidden');
+  document.getElementById('main-page').classList.remove('hidden');
+  renderOpenTables();
+}
+
+function openOpenTable(table) {
+  currentTable = table;
+  document.getElementById('main-page').classList.add('hidden');
+  document.getElementById('menu-page').classList.add('hidden');
+  document.getElementById('open-table-page').classList.remove('hidden');
+  document.getElementById('open-table-title').textContent = `Заказ для ${table}`;
+  renderOpenTableItems();
+}
+
+function renderOpenTableItems() {
+  const div = document.getElementById('open-table-items');
+  div.innerHTML = '';
+  const items = openTables[currentTable];
+  for (const item in items) {
+    const itemDiv = document.createElement('div');
+    itemDiv.className = 'open-table-item';
+    const span = document.createElement('span');
+    span.textContent = `${item}: ${items[item]}`;
+    itemDiv.appendChild(span);
+    const btnContainer = document.createElement('div');
+    const minusBtn = document.createElement('button');
+    minusBtn.textContent = '-';
+    minusBtn.onclick = () => updateItemQuantity(item, -1);
+    const plusBtn = document.createElement('button');
+    plusBtn.textContent = '+';
+    plusBtn.onclick = () => updateItemQuantity(item, 1);
+    btnContainer.appendChild(minusBtn);
+    btnContainer.appendChild(plusBtn);
+    itemDiv.appendChild(btnContainer);
+    div.appendChild(itemDiv);
+  }
+}
+
+function updateItemQuantity(item, change) {
+  openTables[currentTable][item] += change;
+  if (openTables[currentTable][item] <= 0) delete openTables[currentTable][item];
+  renderOpenTableItems();
+  renderOpenTables();
+}
+
+function saveTable() {
+  alert(`Заказ для ${currentTable} сохранён`);
+  backToMainTables();
+}
+
+function closeTable() {
+  delete openTables[currentTable];
+  alert(`Стол ${currentTable} закрыт`);
+  backToMainTables();
+}
+
+function backToMainTables() {
+  document.getElementById('open-table-page').classList.add('hidden');
+  document.getElementById('main-page').classList.remove('hidden');
+  renderOpenTables();
+}
+</script>
+
+</body>
+</html>

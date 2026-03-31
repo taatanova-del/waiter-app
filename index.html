@@ -2,209 +2,189 @@
 <html lang="ru">
 <head>
 <meta charset="UTF-8">
-<title>Система заказов для официанта</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Сайт для официанта</title>
 <style>
-  body { font-family: Arial, sans-serif; padding: 20px; }
+  body { font-family: Arial, sans-serif; margin: 0; padding: 0; }
   .hidden { display: none; }
-  button { padding: 10px 15px; margin: 5px; cursor: pointer; }
-  .section { margin-bottom: 20px; }
-  #open-tables { margin-top: 20px; }
+  .container { padding: 20px; }
+  .panel { border: 1px solid #ccc; padding: 10px; margin: 10px 0; }
+  .tables button { margin: 5px; }
+  .menu-item { display: flex; justify-content: space-between; margin: 5px 0; }
+  .menu-item button { margin-left: 5px; }
+  .open-table-item { display: flex; justify-content: space-between; margin: 5px 0; }
+  .open-table-item button { margin-left: 5px; }
 </style>
 </head>
 <body>
 
-<h1>Система заказов для официанта</h1>
+<div id="login-page" class="container">
+  <h2>Авторизация</h2>
+  <input type="text" id="username" placeholder="Введите имя">
+  <button onclick="login()">Войти</button>
+</div>
 
-<!-- Главный экран: выбор столика и панель открытых столов -->
-<div id="main-screen" class="section">
-  <h2>Выберите столик</h2>
-  <button onclick="openTable('Стол 1')">Стол 1</button>
-  <button onclick="openTable('Стол 2')">Стол 2</button>
-  <button onclick="openTable('Стол 3')">Стол 3</button>
+<div id="main-page" class="container hidden">
+  <h2>Добро пожаловать, <span id="user-name"></span></h2>
 
-  <div id="open-tables">
-    <h3>Открытые столы:</h3>
-    <div id="open-tables-buttons"></div>
+  <div class="panel">
+    <h3>Столы</h3>
+    <div class="tables" id="tables-panel"></div>
+  </div>
+
+  <div class="panel">
+    <h3>Открытые столы</h3>
+    <div class="open-tables" id="open-tables-panel"></div>
   </div>
 </div>
 
-<!-- Выбор категории -->
-<div id="category-selection" class="section hidden">
-  <h2>Выберите категорию напитков</h2>
-  <button onclick="openCategory('Алкогольные напитки')">Алкогольные напитки</button>
-  <button onclick="openCategory('Безалкогольные напитки')">Безалкогольные напитки</button>
-  <br><br>
-  <button onclick="goBackToMain()">Назад к столам</button>
+<div id="menu-page" class="container hidden">
+  <h2 id="menu-table-title"></h2>
+  <button onclick="chooseCategory('Безалкогольные напитки')">Безалкогольные напитки</button>
+  <button onclick="chooseCategory('Алкогольные напитки')">Алкогольные напитки</button>
+  <div id="menu-items"></div>
+  <button onclick="backToTables()">Вернуться к столикам</button>
 </div>
 
-<!-- Выбор напитка -->
-<div id="drink-selection" class="section hidden">
-  <h2 id="category-title"></h2>
-  <div id="drink-buttons"></div>
-  <br>
-  <button onclick="goBackToCategories()">Назад к категориям</button>
-</div>
-
-<!-- Выбор количества через кнопки 1-5 -->
-<div id="quantity-selection" class="section hidden">
-  <h2 id="drink-title"></h2>
-  <div id="quantity-buttons"></div>
-  <br>
-  <button onclick="goBackToDrinks()">Назад к напиткам</button>
-</div>
-
-<!-- Просмотр текущего заказа -->
-<div id="current-order" class="section hidden">
-  <h2>Текущий заказ для <span id="current-table"></span></h2>
-  <ul id="order-list"></ul>
-  <button onclick="closeTable()">Закрыть столик</button>
-  <button onclick="goBackToMain()">Назад к столам</button>
+<div id="open-table-page" class="container hidden">
+  <h2 id="open-table-title"></h2>
+  <div id="open-table-items"></div>
+  <button onclick="saveTable()">Сохранить</button>
+  <button onclick="closeTable()">Закрыть стол</button>
+  <button onclick="backToMainTables()">Вернуться к столикам</button>
 </div>
 
 <script>
-let currentTable = '';
-let currentCategory = '';
-let currentDrink = '';
-let orders = {}; // { 'Стол 1': [{drink, quantity}] }
-
-const drinksData = {
-  'Алкогольные напитки': ['Вино', 'Пиво', 'Виски'],
-  'Безалкогольные напитки': ['Сок', 'Вода', 'Лимонад']
+let currentUser = '';
+let currentTable = null;
+let tables = ['Стол 1', 'Стол 2', 'Стол 3'];
+let openTables = {};
+let menuData = {
+  'Безалкогольные напитки': ['Сок', 'Вода', 'Лимонад'],
+  'Алкогольные напитки': ['Пиво', 'Вино', 'Водка']
 };
 
-// Открыть стол
-function openTable(table) {
+function login() {
+  const username = document.getElementById('username').value;
+  if (!username) return alert('Введите имя');
+  currentUser = username;
+  document.getElementById('user-name').textContent = username;
+  document.getElementById('login-page').classList.add('hidden');
+  document.getElementById('main-page').classList.remove('hidden');
+  renderTables();
+  renderOpenTables();
+}
+
+function renderTables() {
+  const panel = document.getElementById('tables-panel');
+  panel.innerHTML = '';
+  tables.forEach(table => {
+    const btn = document.createElement('button');
+    btn.textContent = table;
+    btn.onclick = () => openMenu(table);
+    panel.appendChild(btn);
+  });
+}
+
+function renderOpenTables() {
+  const panel = document.getElementById('open-tables-panel');
+  panel.innerHTML = '';
+  for (const table in openTables) {
+    const btn = document.createElement('button');
+    btn.textContent = table;
+    btn.onclick = () => openOpenTable(table);
+    panel.appendChild(btn);
+  }
+}
+
+function openMenu(table) {
   currentTable = table;
-  if(!orders[currentTable]) orders[currentTable] = [];
-  document.getElementById('main-screen').classList.add('hidden');
-  document.getElementById('category-selection').classList.remove('hidden');
-  updateOpenTables();
-  updateOrderView();
+  document.getElementById('main-page').classList.add('hidden');
+  document.getElementById('menu-page').classList.remove('hidden');
+  document.getElementById('menu-table-title').textContent = `Меню для ${table}`;
+  document.getElementById('menu-items').innerHTML = '';
 }
 
-// Назад к главному экрану
-function goBackToMain() {
-  currentCategory = '';
-  currentDrink = '';
-  document.getElementById('category-selection').classList.add('hidden');
-  document.getElementById('drink-selection').classList.add('hidden');
-  document.getElementById('quantity-selection').classList.add('hidden');
-  document.getElementById('current-order').classList.add('hidden');
-  document.getElementById('main-screen').classList.remove('hidden');
-  updateOpenTables();
-}
-
-// Панель открытых столов
-function updateOpenTables() {
-  const container = document.getElementById('open-tables-buttons');
-  container.innerHTML = '';
-  for (let table in orders) {
-    if (orders[table].length > 0) {
+function chooseCategory(category) {
+  const itemsDiv = document.getElementById('menu-items');
+  itemsDiv.innerHTML = '';
+  menuData[category].forEach(item => {
+    const div = document.createElement('div');
+    div.className = 'menu-item';
+    div.textContent = item;
+    for (let i = 1; i <= 5; i++) {
       const btn = document.createElement('button');
-      btn.innerText = table;
-      btn.onclick = () => viewOrder(table);
-      container.appendChild(btn);
+      btn.textContent = i;
+      btn.onclick = () => addItemToTable(item, i);
+      div.appendChild(btn);
     }
-  }
+    itemsDiv.appendChild(div);
+  });
 }
 
-// Просмотр заказа конкретного столика
-function viewOrder(table) {
+function addItemToTable(item, quantity) {
+  if (!openTables[currentTable]) openTables[currentTable] = {};
+  openTables[currentTable][item] = quantity;
+  alert(`${quantity} x ${item} добавлено в ${currentTable}`);
+}
+
+function backToTables() {
+  document.getElementById('menu-page').classList.add('hidden');
+  document.getElementById('main-page').classList.remove('hidden');
+  renderOpenTables();
+}
+
+function openOpenTable(table) {
   currentTable = table;
-  document.getElementById('main-screen').classList.add('hidden');
-  document.getElementById('current-order').classList.remove('hidden');
-  updateOrderView();
+  document.getElementById('main-page').classList.add('hidden');
+  document.getElementById('open-table-page').classList.remove('hidden');
+  document.getElementById('open-table-title').textContent = `Заказ для ${table}`;
+  renderOpenTableItems();
 }
 
-// Выбор категории
-function openCategory(category) {
-  currentCategory = category;
-  document.getElementById('category-selection').classList.add('hidden');
-  document.getElementById('drink-selection').classList.remove('hidden');
-  document.getElementById('category-title').innerText = category;
-
-  const drinkButtons = document.getElementById('drink-buttons');
-  drinkButtons.innerHTML = '';
-  drinksData[category].forEach(drink => {
-    const btn = document.createElement('button');
-    btn.innerText = drink;
-    btn.onclick = () => selectDrink(drink);
-    drinkButtons.appendChild(btn);
-  });
-}
-
-// Назад к категориям
-function goBackToCategories() {
-  document.getElementById('drink-selection').classList.add('hidden');
-  document.getElementById('quantity-selection').classList.add('hidden');
-  document.getElementById('category-selection').classList.remove('hidden');
-}
-
-// Выбор напитка
-function selectDrink(drink) {
-  currentDrink = drink;
-  document.getElementById('drink-selection').classList.add('hidden');
-  document.getElementById('quantity-selection').classList.remove('hidden');
-  document.getElementById('drink-title').innerText = drink;
-
-  // Кнопки 1-5
-  const container = document.getElementById('quantity-buttons');
-  container.innerHTML = '';
-  for(let i=1; i<=5; i++){
-    const btn = document.createElement('button');
-    btn.innerText = i;
-    btn.onclick = () => saveDrink(i);
-    container.appendChild(btn);
+function renderOpenTableItems() {
+  const div = document.getElementById('open-table-items');
+  div.innerHTML = '';
+  const items = openTables[currentTable];
+  for (const item in items) {
+    const itemDiv = document.createElement('div');
+    itemDiv.className = 'open-table-item';
+    const span = document.createElement('span');
+    span.textContent = `${item}: ${items[item]}`;
+    itemDiv.appendChild(span);
+    const minusBtn = document.createElement('button');
+    minusBtn.textContent = '-';
+    minusBtn.onclick = () => updateItemQuantity(item, -1);
+    const plusBtn = document.createElement('button');
+    plusBtn.textContent = '+';
+    plusBtn.onclick = () => updateItemQuantity(item, 1);
+    itemDiv.appendChild(minusBtn);
+    itemDiv.appendChild(plusBtn);
+    div.appendChild(itemDiv);
   }
 }
 
-// Назад к напиткам
-function goBackToDrinks() {
-  document.getElementById('quantity-selection').classList.add('hidden');
-  document.getElementById('drink-selection').classList.remove('hidden');
+function updateItemQuantity(item, change) {
+  openTables[currentTable][item] += change;
+  if (openTables[currentTable][item] <= 0) delete openTables[currentTable][item];
+  renderOpenTableItems();
 }
 
-// Сохраняем напиток с выбранным количеством
-function saveDrink(quantity) {
-  orders[currentTable].push({drink: currentDrink, quantity});
-  document.getElementById('quantity-selection').classList.add('hidden');
-  document.getElementById('current-order').classList.remove('hidden');
-  updateOrderView();
-  updateOpenTables();
+function saveTable() {
+  alert(`Заказ для ${currentTable} сохранён`);
+  backToMainTables();
 }
 
-// Обновление отображения заказа с кнопками удаления
-function updateOrderView() {
-  document.getElementById('current-table').innerText = currentTable;
-  const list = document.getElementById('order-list');
-  list.innerHTML = '';
-
-  orders[currentTable].forEach((item, index) => {
-    const li = document.createElement('li');
-    li.innerText = `${item.drink} — ${item.quantity} `;
-
-    const delBtn = document.createElement('button');
-    delBtn.innerText = '❌ Удалить';
-    delBtn.style.marginLeft = '10px';
-    delBtn.onclick = () => {
-      orders[currentTable].splice(index, 1);
-      updateOrderView();
-      updateOpenTables();
-    };
-
-    li.appendChild(delBtn);
-    list.appendChild(li);
-  });
-}
-
-// Закрыть столик
 function closeTable() {
-  alert(`Заказ для ${currentTable} сохранён!`);
-  delete orders[currentTable];
-  currentTable = '';
-  document.getElementById('current-order').classList.add('hidden');
-  document.getElementById('main-screen').classList.remove('hidden');
-  updateOpenTables();
+  delete openTables[currentTable];
+  alert(`Стол ${currentTable} закрыт`);
+  backToMainTables();
+}
+
+function backToMainTables() {
+  document.getElementById('open-table-page').classList.add('hidden');
+  document.getElementById('main-page').classList.remove('hidden');
+  renderOpenTables();
 }
 </script>
 

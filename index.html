@@ -1,306 +1,258 @@
 <!DOCTYPE html>
 <html lang="ru">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Waiter App</title>
-  <style>
-  body {
-    font-family: -apple-system, BlinkMacSystemFont, sans-serif;
-    margin:0;
-    background:#f8f8f8;
-  }
-
-  .container {
-    max-width:420px;
-    margin:auto;
-    padding:20px;
-  }
-
-  input {
-    width:100%;
-    padding:12px;
-    margin:8px 0;
-    border-radius:10px;
-    border:1px solid #ddd;
-    font-size:14px;
-  }
-
-  button {
-    width:100%;
-    padding:12px;
-    margin:6px 0;
-    border:none;
-    border-radius:12px;
-    background:#111;
-    color:#fff;
-    font-size:14px;
-    cursor:pointer;
-    transition:0.2s;
-  }
-
-  button:hover {
-    opacity:0.85;
-  }
-
-  .grid {
-    display:grid;
-    grid-template-columns:repeat(2,1fr);
-    gap:12px;
-    padding:12px;
-  }
-
-  .table {
-    padding:18px;
-    border-radius:16px;
-    text-align:center;
-    font-weight:500;
-    box-shadow:0 4px 10px rgba(0,0,0,0.05);
-  }
-
-  .open {
-    background:#d4f8d4;
-  }
-
-  .closed {
-    background:#f2e7c9;
-  }
-
-  .header {
-    padding:14px;
-    font-weight:600;
-    font-size:16px;
-  }
-
-  .menu, .order {
-    background:#fff;
-    padding:14px;
-    margin:10px;
-    border-radius:16px;
-    box-shadow:0 4px 12px rgba(0,0,0,0.05);
-  }
-
-  .menu h3 {
-    margin-top:10px;
-    font-size:15px;
-  }
-
-  .order div {
-    display:flex;
-    justify-content:space-between;
-    align-items:center;
-    margin-bottom:8px;
-  }
-
-  .order button {
-    width:auto;
-    padding:6px 10px;
-    margin-left:4px;
-    border-radius:8px;
-    font-size:12px;
-  }
-
-  .hidden { display:none; }
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>POS для официантов</title>
+<style>
+body {
+  font-family: -apple-system, BlinkMacSystemFont, sans-serif;
+  margin:0;
+  background:#f8f8f8;
+}
+.container {
+  max-width:420px;
+  margin:auto;
+  padding:20px;
+}
+input {
+  width:100%;
+  padding:12px;
+  margin:8px 0;
+  border-radius:10px;
+  border:1px solid #ddd;
+  font-size:14px;
+}
+button {
+  width:100%;
+  padding:12px;
+  margin:6px 0;
+  border:none;
+  border-radius:12px;
+  background:#111;
+  color:#fff;
+  font-size:14px;
+  cursor:pointer;
+  transition:0.2s;
+}
+button:hover { opacity:0.85; }
+.grid {
+  display:grid;
+  grid-template-columns:repeat(2,1fr);
+  gap:12px;
+  padding:12px;
+}
+.table {
+  padding:18px;
+  border-radius:16px;
+  text-align:center;
+  font-weight:500;
+  box-shadow:0 4px 10px rgba(0,0,0,0.05);
+}
+.open { background:#d4f8d4; }
+.closed { background:#f2e7c9; }
+.header { padding:14px; font-weight:600; font-size:16px; }
+.menu, .order {
+  background:#fff;
+  padding:14px;
+  margin:10px 0;
+  border-radius:16px;
+  box-shadow:0 4px 12px rgba(0,0,0,0.05);
+}
+.menu h3 { margin-top:10px; font-size:15px; }
+.order div { display:flex; justify-content:space-between; align-items:center; margin-bottom:8px; }
+.order button { width:auto; padding:6px 10px; margin-left:4px; border-radius:8px; font-size:12px; }
+.hidden { display:none; }
+.flex-row { display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; }
+.flex-row button { width:auto; margin:2px; }
 </style>
 </head>
 <body>
-
-<div id="loginPage" class="container">
+<div class="container" id="loginPage">
   <h2>Вход</h2>
-  <input id="login" placeholder="Логин">
-  <input id="password" type="password" placeholder="Пароль">
+  <input type="text" id="username" placeholder="Логин">
+  <input type="password" id="password" placeholder="Пароль">
   <button onclick="login()">Войти</button>
-  <p id="error"></p>
+  <div id="loginError" style="color:red;"></div>
 </div>
 
-<div id="mainPage" class="hidden">
-  <div class="header" onclick="showProfile()" id="username"></div>
-  <div id="tables" class="grid"></div>
+<div class="container hidden" id="mainPage">
+  <div class="header">Привет, <span id="userName"></span> <button onclick="showProfile()">Профиль</button></div>
+  <h3>Открытые столы</h3>
+  <div class="grid" id="openTables"></div>
+  <h3>Все столы</h3>
+  <div class="grid" id="allTables"></div>
 </div>
 
-<div id="tablePage" class="hidden">
-  <button onclick="showMain()">Назад</button>
-  <div id="menu" class="menu"></div>
-  <div id="order" class="order"></div>
-  <button onclick="saveOrder()">Сохранить</button>
+<div class="container hidden" id="tablePage">
+  <button onclick="backToMain()">← Назад</button>
+  <h2 id="tableTitle"></h2>
+  <div class="menu" id="menuContainer"></div>
+  <div class="order" id="orderContainer"></div>
+  <button onclick="saveOrder()">Сохранить локально</button>
   <button onclick="closeTable()">Закрыть стол</button>
 </div>
 
-<div id="profilePage" class="hidden container"></div>
+<div class="container hidden" id="profilePage">
+  <button onclick="backToMain()">← Назад</button>
+  <h3>Личный кабинет</h3>
+  <p>Имя: <span id="profileUsername"></span></p>
+  <p>Роль: <span id="profileRole"></span></p>
+</div>
 
 <script>
-const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxvi5Fc5J9x2MWfV587SusaC6gOp2fgOuEI78qEv0kMK-RvW6LCRi5qEj-parCMJSTK/exec";
+const SCRIPT_URL = "https://script.google.com/macros/s/AKfycby_6Gn2Gifxlm06oQomQPebBJM0rFme13fw0iae4TtUwlAkczayEIdJ2O4Nof2mn8Qe/exec";
 
-let user = null;
+let currentUser = null;
+let tables = [], menu = [];
 let currentTable = null;
-let orders = JSON.parse(localStorage.getItem("orders") || "{}");
+let order = [];
 
-async function login(){
-  const l = document.getElementById("login").value;
-  const p = document.getElementById("password").value;
-
-  const res = await fetch(SCRIPT_URL + "?type=users");
-  const users = await res.json();
-
-  const found = users.find(u=>u.username===l && u.password===p);
-
-  if(!found){
-    document.getElementById("error").innerText = "Неверный логин или пароль";
-    return;
+async function fetchData(type) {
+  try {
+    const res = await fetch(`${SCRIPT_URL}?type=${type}`);
+    return await res.json();
+  } catch(e) {
+    alert("Ошибка подключения к серверу");
+    return [];
   }
-
-  user = found;
-  document.getElementById("loginPage").classList.add("hidden");
-  showMain();
 }
 
-function showMain(){
-  hideAll();
-  document.getElementById("mainPage").classList.remove("hidden");
-
-  document.getElementById("username").innerText = user.username;
-
-  const container = document.getElementById("tables");
-  container.innerHTML="";
-
-  fetch(SCRIPT_URL + "?type=tables")
-    .then(res=>res.json())
-    .then(tables=>{
-      tables.forEach(t=>{
-        const id = t.id;
-        const name = t.name;
-
-        const div=document.createElement("div");
-        div.className="table "+(orders[id]?"open":"closed");
-        div.innerText=name;
-        div.onclick=()=>openTable(id);
-        container.appendChild(div);
-      });
-    });
+async function login() {
+  const u = document.getElementById("username").value.trim();
+  const p = document.getElementById("password").value.trim();
+  const users = await fetchData("users");
+  const user = users.find(x => x.username===u && x.password===p);
+  if(user){
+    currentUser = user;
+    document.getElementById("userName").innerText = currentUser.username;
+    document.getElementById("loginPage").classList.add("hidden");
+    document.getElementById("mainPage").classList.remove("hidden");
+    tables = await fetchData("tables");
+    menu = await fetchData("menu");
+    renderTables();
+  } else {
+    document.getElementById("loginError").innerText = "Неверный логин или пароль";
+  }
 }
 
-function openTable(id){
-  currentTable=id;
-  hideAll();
+function renderTables() {
+  const allDiv = document.getElementById("allTables");
+  allDiv.innerHTML = "";
+  tables.forEach(t => {
+    const div = document.createElement("div");
+    div.className = "table closed";
+    div.innerText = t.name;
+    div.onclick = () => openTable(t);
+    allDiv.appendChild(div);
+  });
+}
+
+function openTable(t) {
+  currentTable = t;
+  order = [];
+  document.getElementById("mainPage").classList.add("hidden");
   document.getElementById("tablePage").classList.remove("hidden");
-  loadMenu();
-}
-
-async function loadMenu(){
-  const res = await fetch(SCRIPT_URL + "?type=menu");
-  const data = await res.json();
-
-  const grouped = {};
-
-  data.forEach(row=>{
-    if(!grouped[row.category]) grouped[row.category]=[];
-    grouped[row.category].push(row.item);
-  });
-
-  const menu = document.getElementById("menu");
-  menu.innerHTML="";
-
-  Object.keys(grouped).forEach(cat=>{
-    const h=document.createElement("h3");
-    h.innerText=cat;
-    menu.appendChild(h);
-
-    grouped[cat].forEach(item=>{
-      const btn=document.createElement("button");
-      btn.innerText=item;
-      btn.onclick=()=>addItem(item,cat);
-      menu.appendChild(btn);
-    });
-  });
-
+  document.getElementById("tableTitle").innerText = t.name;
+  renderMenu();
   renderOrder();
 }
 
-function addItem(name,cat){
-  if(!orders[currentTable]) orders[currentTable]=[];
+function renderMenu() {
+  const container = document.getElementById("menuContainer");
+  container.innerHTML = "";
+  const cats = [...new Set(menu.map(m=>m.category))];
+  cats.forEach(cat=>{
+    const h3 = document.createElement("h3");
+    h3.innerText = cat;
+    container.appendChild(h3);
+    const itemsDiv = document.createElement("div");
+    itemsDiv.className = "flex-row";
+    menu.filter(m=>m.category===cat).forEach(item=>{
+      const btn = document.createElement("button");
+      btn.innerText = item.item;
+      btn.onclick = () => addToOrder(cat,item.item);
+      itemsDiv.appendChild(btn);
+      // быстрые кнопки +1 +2 +3 +5
+      [1,2,3,5].forEach(n=>{
+        const b = document.createElement("button");
+        b.innerText = "+"+n;
+        b.onclick = (e)=>{
+          e.stopPropagation();
+          addToOrder(cat,item.item,n);
+        }
+        itemsDiv.appendChild(b);
+      });
+    });
+    container.appendChild(itemsDiv);
+  });
+}
 
-  let item=orders[currentTable].find(i=>i.name===name);
-
-  if(item) item.qty++;
-  else orders[currentTable].push({name,cat,qty:1});
-
-  saveLocal();
+function addToOrder(cat,item,n=1){
+  const idx = order.findIndex(x=>x.cat===cat && x.name===item);
+  if(idx>=0){
+    order[idx].qty += n;
+  } else {
+    order.push({cat,name:item,qty:n});
+  }
   renderOrder();
 }
 
 function renderOrder(){
-  const div=document.getElementById("order");
-  div.innerHTML="";
-
-  (orders[currentTable]||[]).forEach(i=>{
-    const el=document.createElement("div");
-    el.innerText=`${i.name} x${i.qty}`;
-
-    const plus=document.createElement("button");
-    plus.innerText="+";
-    plus.onclick=()=>{i.qty++;saveLocal();renderOrder();};
-
-    const minus=document.createElement("button");
+  const container = document.getElementById("orderContainer");
+  container.innerHTML = "";
+  order.forEach((o,i)=>{
+    const div = document.createElement("div");
+    div.innerHTML = `<span>${o.name} (${o.qty})</span>`;
+    const minus = document.createElement("button");
     minus.innerText="-";
-    minus.onclick=()=>{
-      i.qty--;
-      if(i.qty<=0) orders[currentTable]=orders[currentTable].filter(x=>x!==i);
-      saveLocal();renderOrder();
-    };
-
-    el.appendChild(plus);
-    el.appendChild(minus);
-    div.appendChild(el);
+    minus.onclick=()=>{ o.qty--; if(o.qty<=0) order.splice(i,1); renderOrder(); };
+    const plus = document.createElement("button");
+    plus.innerText="+";
+    plus.onclick=()=>{ o.qty++; renderOrder(); };
+    div.appendChild(minus);
+    div.appendChild(plus);
+    container.appendChild(div);
   });
-}
-
-function saveLocal(){
-  localStorage.setItem("orders", JSON.stringify(orders));
 }
 
 function saveOrder(){
-  saveLocal();
-  showMain();
+  alert("Заказ сохранен локально");
 }
 
 async function closeTable(){
-  const data = orders[currentTable]||[];
-
+  if(order.length===0){ alert("Нет позиций для отправки"); return; }
   const now = new Date();
+  const data = {
+    table: currentTable.id,
+    user: currentUser.username,
+    date: now.toLocaleDateString('ru-RU'),
+    time: now.toLocaleTimeString('ru-RU'),
+    items: order
+  };
+  try {
+    await fetch(SCRIPT_URL,{
+      method:"POST",
+      body: JSON.stringify(data)
+    });
+    alert("Стол закрыт, заказ отправлен");
+    backToMain();
+  } catch(e){ alert("Ошибка отправки заказа"); }
+}
 
-  await fetch(SCRIPT_URL,{
-    method:"POST",
-    body:JSON.stringify({
-      table:currentTable,
-      user:user.username,
-      date: now.toLocaleDateString(),
-      time: now.toLocaleTimeString(),
-      items:data
-    })
-  });
-
-  delete orders[currentTable];
-  saveLocal();
-  showMain();
+function backToMain(){
+  document.getElementById("tablePage").classList.add("hidden");
+  document.getElementById("profilePage").classList.add("hidden");
+  document.getElementById("mainPage").classList.remove("hidden");
+  renderTables();
 }
 
 function showProfile(){
-  hideAll();
-  const div=document.getElementById("profilePage");
-  div.classList.remove("hidden");
-  div.innerHTML=`
-    <p>Логин: ${user.username}</p>
-    <p>Роль: ${user.role}</p>
-    <button onclick="showMain()">Назад</button>
-  `;
-}
-
-function hideAll(){
+  document.getElementById("profileUsername").innerText = currentUser.username;
+  document.getElementById("profileRole").innerText = currentUser.role;
   document.getElementById("mainPage").classList.add("hidden");
-  document.getElementById("tablePage").classList.add("hidden");
-  document.getElementById("profilePage").classList.add("hidden");
+  document.getElementById("profilePage").classList.remove("hidden");
 }
 </script>
-
 </body>
 </html>

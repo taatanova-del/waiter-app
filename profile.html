@@ -1,1 +1,27 @@
-
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="container" style="max-width: 500px;">
+        <div class="section">
+            <h2>Личный кабинет</h2>
+            <div id="profileData"></div>
+            <button class="btn btn-back" style="width:100%; margin-top:20px;" onclick="location.href='main.html'">На главную</button>
+            <button class="btn btn-close" onclick="localStorage.clear(); location.href='index.html'">Выйти из системы</button>
+        </div>
+    </div>
+    <script>
+        const user = JSON.parse(localStorage.getItem('currentUser'));
+        if(!user) location.href = 'index.html';
+        document.getElementById('profileData').innerHTML = `
+            <p><b>Имя:</b> ${user.name}</p>
+            <p><b>Логин:</b> ${user.login}</p>
+            <p><b>Должность:</b> ${user.role}</p>
+        `;
+    </script>
+</body>
+</html>

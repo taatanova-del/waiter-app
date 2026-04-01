@@ -1,1 +1,47 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<title>Главная</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<header>
+  <span id="userName"></span>
+  <button onclick="logout()">Выйти</button>
+</header>
 
+<h2>Столы</h2>
+<div id="tablesContainer" class="tables-grid"></div>
+
+<script src="script.js"></script>
+<script>
+const currentUser = JSON.parse(localStorage.getItem("currentUser"));
+if(!currentUser) { window.location.href = "index.html"; }
+document.getElementById("userName").innerText = currentUser.username;
+
+async function renderTables(){
+  await loadData();
+  const container = document.getElementById("tablesContainer");
+  container.innerHTML = "";
+  data.tables.forEach(table => {
+    const btn = document.createElement("button");
+    btn.innerText = table.name;
+    btn.className = table.items && Object.keys(table.items).length ? "table-open" : "table-closed";
+    btn.onclick = () => {
+      localStorage.setItem("currentTable", JSON.stringify(table));
+      window.location.href = "table.html";
+    }
+    container.appendChild(btn);
+  });
+}
+
+renderTables();
+
+function logout(){
+  localStorage.removeItem("currentUser");
+  window.location.href = "index.html";
+}
+</script>
+</body>
+</html>

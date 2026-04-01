@@ -75,7 +75,7 @@
   <div id="menuSections"></div>
   <h3>Заказ</h3>
   <div id="orderList"></div>
-  <button id="saveOrderBtn">Сохранить (локально)</button>
+  <button id="saveOrderBtn">Сохранить</button>
 </div>
 
 <script>
@@ -96,7 +96,7 @@ async function loadData(){
 document.getElementById('loginBtn').addEventListener('click', ()=>{
   const u = document.getElementById('username').value.trim();
   const p = document.getElementById('password').value.trim();
-  const user = data.users.find(x=>x.username===u && x.password===p);
+  const user = data.users.find(x=>x.username===u && String(x.password)===p);
   if(user){
     currentUser = user;
     document.getElementById('loginPage').classList.add('hidden');
@@ -112,7 +112,6 @@ function showMainPage(){
   document.getElementById('userProfile').innerText = currentUser.username;
   document.getElementById('userProfile').onclick = ()=>{ showProfile(); };
   
-  // Кнопка добавления пользователей только для админа
   const addUserBtn = document.getElementById('addUserBtn');
   if(currentUser.role === 'admin'){
     addUserBtn.innerText = "Добавить пользователя";
@@ -129,7 +128,7 @@ function renderTables(){
   container.innerHTML = "";
   data.tables.forEach(t=>{
     const div = document.createElement('div');
-    div.className = 'table-card'+(t.items && Object.keys(t.items).length>0 ? ' open' : '');
+    div.className = 'table-card'+(orders[t.name] && Object.keys(orders[t.name]).length>0 ? ' open' : '');
     div.innerText = t.name;
     div.onclick = ()=>{ openTable(t); };
     container.appendChild(div);
@@ -237,16 +236,14 @@ function renderOrder(){
   }
 }
 
-// --- Локальное сохранение (только для возврата на главную) ---
+// --- Локальное сохранение ---
 document.getElementById('saveOrderBtn').addEventListener('click', ()=>{
-  // Просто возвращаемся на главную, без отправки
   document.getElementById('menuPage').classList.add('hidden');
   showMainPage();
 });
 
 // --- Закрытие стола ---
 document.getElementById('closeTableBtn').addEventListener('click', async ()=>{
-  // Отправляем все заказы в Google Sheets
   for(const item in orders[currentTable.name]){
     const o = orders[currentTable.name][item];
     await fetch(SCRIPT_URL, {

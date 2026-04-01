@@ -3,39 +3,33 @@
     --beige: #f5f5dc;
     --black: #2c3e50;
     --white: #ffffff;
-    --shadow: 0 4px 15px rgba(0,0,0,0.1);
+    --shadow: 0 4px 10px rgba(0,0,0,0.1);
 }
 
-body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; margin: 0; background: #f9f9f9; color: var(--black); }
-header { background: var(--white); padding: 15px 20px; display: flex; justify-content: space-between; align-items: center; box-shadow: var(--shadow); position: sticky; top: 0; z-index: 100; }
-.container { padding: 20px; max-width: 800px; margin: auto; }
+body { font-family: 'Segoe UI', sans-serif; margin: 0; background: #f4f7f6; color: var(--black); height: 100vh; overflow: hidden; }
+.container { padding: 15px; max-width: 800px; margin: auto; height: 100%; display: flex; flex-direction: column; }
 
-h1, h2, h3 { margin-top: 0; }
+/* Сетка столов */
+.grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(110px, 1fr)); gap: 10px; }
+.table-card { height: 80px; border-radius: 12px; border: none; font-weight: bold; cursor: pointer; box-shadow: var(--shadow); }
+.open { background: var(--green); color: white; }
+.empty { background: var(--beige); color: black; }
 
-/* Кнопки столов */
-.grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(130px, 1fr)); gap: 15px; }
-.table-card { 
-    height: 100px; border-radius: 15px; display: flex; align-items: center; justify-content: center; 
-    font-weight: 700; cursor: pointer; transition: 0.3s; box-shadow: var(--shadow); border: none; color: black; font-size: 1.1rem;
-}
-.table-card:hover { transform: translateY(-5px); filter: brightness(0.95); }
-.open { background-color: var(--green); }
-.empty { background-color: var(--beige); }
+/* Разделение экрана на странице стола */
+.menu-upper { flex: 1; overflow-y: auto; background: #fff; border-radius: 15px; padding: 15px; margin-bottom: 10px; box-shadow: var(--shadow); }
+.order-lower { height: 40%; overflow-y: auto; background: var(--black); color: white; border-radius: 15px 15px 0 0; padding: 15px; }
 
-/* Элементы управления */
-.btn { padding: 12px 20px; border: none; border-radius: 8px; cursor: pointer; font-weight: bold; transition: 0.2s; font-size: 1rem; }
-.btn:active { transform: scale(0.98); }
-.btn-add { background: var(--green); color: white; padding: 5px 15px; border-radius: 50px; }
-.btn-save { background: #3498db; color: white; width: 100%; margin-top: 15px; }
-.btn-close { background: #e74c3c; color: white; width: 100%; margin-top: 10px; }
-.btn-back { background: #95a5a6; color: white; margin-bottom: 20px; }
+/* Кнопки категорий и товаров */
+.menu-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; }
+.btn-menu { padding: 20px 10px; border: none; border-radius: 10px; background: #ecf0f1; font-weight: bold; cursor: pointer; font-size: 1rem; }
+.btn-item { background: #3498db; color: white; }
 
-/* Меню и заказ */
-.section { background: white; padding: 20px; border-radius: 12px; margin-bottom: 20px; box-shadow: var(--shadow); }
-.item-row { display: flex; justify-content: space-between; align-items: center; padding: 12px 0; border-bottom: 1px solid #eee; }
-.qty-controls { display: flex; align-items: center; gap: 10px; }
-.qty-btn { width: 30px; height: 30px; border-radius: 50%; border: 1px solid #ccc; background: white; cursor: pointer; }
+/* Кнопки управления */
+.btn { padding: 12px; border: none; border-radius: 8px; font-weight: bold; cursor: pointer; width: 100%; margin-top: 5px; }
+.btn-save { background: var(--green); color: white; }
+.btn-close { background: #e74c3c; color: white; }
+.btn-back { background: #95a5a6; color: white; margin-bottom: 10px; }
+.btn-refresh { background: #f39c12; color: white; margin-top: 20px; }
 
-input[type="text"], input[type="password"] {
-    width: 100%; padding: 12px; margin: 10px 0; border: 1px solid #ddd; border-radius: 8px; box-sizing: border-box;
-}
+.item-row { display: flex; justify-content: space-between; align-items: center; padding: 8px 0; border-bottom: 1px solid #444; }
+.qty-btn { width: 30px; height: 30px; border-radius: 50%; border: none; background: #fff; cursor: pointer; font-weight: bold; }

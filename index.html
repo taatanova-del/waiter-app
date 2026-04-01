@@ -6,21 +6,21 @@
 <title>Приложение для официанта</title>
 <style>
   body { font-family: Arial, sans-serif; background: #f4f4f9; margin: 0; padding: 0; }
-  .container { max-width: 800px; margin: 20px auto; padding: 20px; background: #fff; border-radius: 10px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
+  .container { max-width: 900px; margin: 20px auto; padding: 20px; background: #fff; border-radius: 10px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
   input { width: 100%; padding: 10px; margin: 10px 0; border-radius: 6px; border: 1px solid #ccc; }
   button { padding: 8px 15px; margin: 3px; border: none; border-radius: 6px; background: #4a90e2; color: white; cursor: pointer; }
   button:hover { background: #357ABD; }
   .hidden { display: none; }
   .tables { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 15px; }
-  .table-btn { padding: 15px; border-radius: 8px; border: none; flex: 1; min-width: 100px; cursor: pointer; font-weight: bold; }
+  .table-btn { padding: 15px; border-radius: 8px; border: none; flex: 1; min-width: 100px; cursor: pointer; font-weight: bold; color: black; }
   .table-empty { background: beige; }
   .table-active { background: green; color: white; }
-  .menu-block, .order-block { border: 1px solid #ccc; border-radius: 10px; padding: 15px; margin: 10px; background: #fafafa; }
-  .table-layout { display: flex; gap: 15px; }
+  .menu-block { border: 1px solid #ccc; border-radius: 10px; padding: 15px; margin: 10px 0; background: #fafafa; }
   .menu-item, .order-item { display: flex; justify-content: space-between; margin: 5px 0; padding: 5px 10px; border-radius: 6px; background: #f0f0f0; }
-  .user-name { cursor: pointer; color: #4a90e2; font-weight: bold; }
-  .category-btn { margin: 3px; background: #8e44ad; }
+  .category-btn { margin: 3px; background: #8e44ad; color: white; }
   .category-btn:hover { background: #732d91; }
+  .user-name { cursor: pointer; color: #4a90e2; font-weight: bold; }
+  #order-section { margin-top: 10px; border: 1px solid #ccc; padding: 10px; border-radius: 8px; background: #f9f9f9; }
 </style>
 </head>
 <body>
@@ -55,18 +55,14 @@
 <!-- Страница стола -->
 <div class="container hidden" id="table-page">
   <h2 id="table-name"></h2>
-  <div class="table-layout">
-    <div class="menu-block">
-      <h3>Меню</h3>
-      <div id="menu-categories"></div>
-      <div id="menu-items"></div>
-    </div>
-    <div class="order-block">
-      <h3>Заказ</h3>
+  <div class="menu-block">
+    <h3>Меню</h3>
+    <div id="menu-categories"></div>
+    <div id="menu-items"></div>
+    <div id="order-section">
+      <h4>Заказ:</h4>
       <div id="order-items"></div>
-      <div>
-        <input type="checkbox" id="save-order" /> Сохранить заказ
-      </div>
+      <button onclick="saveOrder()">✓</button>
       <button onclick="closeTable()">Закрыть стол</button>
     </div>
   </div>
@@ -88,7 +84,8 @@
     {"id":1,"name":"Стол 1","items":{}},
     {"id":2,"name":"Стол 2","items":{}},
     {"id":3,"name":"Стол 3","items":{}}
-  ]
+  ],
+  "googleSheetEndpoint": "YOUR_GOOGLE_SHEET_WEBHOOK_URL"
 }
 </script>
 
@@ -101,62 +98,74 @@ let currentTable = null;
 function login() {
   const username = document.getElementById("username").value.trim();
   const password = document.getElementById("password").value.trim();
-  const user = data.users.find(u => u.username === username && u.password === password);
+  const user = data.users.find(u => u.username===username && u.password===password);
   if(user){
-    currentUser = user;
+    currentUser=user;
     document.getElementById("login-page").classList.add("hidden");
     document.getElementById("main-page").classList.remove("hidden");
-    document.getElementById("user-display").textContent = user.name;
+    document.getElementById("user-display").textContent=user.name;
     renderTables();
   } else {
-    document.getElementById("login-error").textContent = "Неверный логин или пароль";
+    document.getElementById("login-error").textContent="Неверный логин или пароль";
   }
 }
 
-// Главная страница
+// Главная
 function renderTables() {
-  const panel = document.getElementById("tables-panel");
-  panel.innerHTML = "";
-  data.tables.forEach(table => {
-    const btn = document.createElement("button");
-    btn.textContent = table.name;
-    btn.className = Object.keys(table.items).length ? "table-btn table-active" : "table-btn table-empty";
-    btn.onclick = () => openTable(table.id);
+  const panel=document.getElementById("tables-panel");
+  panel.innerHTML="";
+  data.tables.forEach(table=>{
+    const btn=document.createElement("button");
+    btn.textContent=table.name;
+    btn.className=Object.keys(table.items).length ? "table-btn table-active" : "table-btn table-empty";
+    btn.onclick=()=>openTable(table.id);
     panel.appendChild(btn);
   });
 }
 
-// Переход к столу
+// Личный кабинет
+function goToProfile(){
+  document.getElementById("main-page").classList.add("hidden");
+  document.getElementById("profile-page").classList.remove("hidden");
+  document.getElementById("profile-name").textContent=currentUser.name;
+  document.getElementById("profile-role").textContent=currentUser.role;
+  document.getElementById("profile-username").textContent=currentUser.username;
+}
+function backToMain(){
+  document.getElementById("profile-page").classList.add("hidden");
+  document.getElementById("main-page").classList.remove("hidden");
+}
+
+// Открыть стол
 function openTable(tableId){
-  currentTable = data.tables.find(t => t.id===tableId);
+  currentTable=data.tables.find(t=>t.id===tableId);
   document.getElementById("main-page").classList.add("hidden");
   document.getElementById("table-page").classList.remove("hidden");
-  document.getElementById("table-name").textContent = currentTable.name;
+  document.getElementById("table-name").textContent=currentTable.name;
   renderMenuCategories();
   renderOrderItems();
 }
 
 // Меню
-function renderMenuCategories() {
-  const catDiv = document.getElementById("menu-categories");
-  catDiv.innerHTML = "";
+function renderMenuCategories(){
+  const catDiv=document.getElementById("menu-categories");
+  catDiv.innerHTML="";
   for(const cat in data.menu){
-    const btn = document.createElement("button");
-    btn.textContent = cat;
-    btn.className = "category-btn";
-    btn.onclick = ()=> showMenuItems(cat);
+    const btn=document.createElement("button");
+    btn.textContent=cat;
+    btn.className="category-btn";
+    btn.onclick=()=>showMenuItems(cat);
     catDiv.appendChild(btn);
   }
 }
-
-function showMenuItems(category) {
-  const itemsDiv = document.getElementById("menu-items");
-  itemsDiv.innerHTML = "";
+function showMenuItems(category){
+  const itemsDiv=document.getElementById("menu-items");
+  itemsDiv.innerHTML="";
   data.menu[category].forEach(item=>{
-    const div = document.createElement("div");
-    div.className = "menu-item";
-    div.textContent = item;
-    div.onclick = ()=> addItemToOrder(item);
+    const div=document.createElement("div");
+    div.className="menu-item";
+    div.textContent=item;
+    div.onclick=()=>addItemToOrder(item);
     itemsDiv.appendChild(div);
   });
 }
@@ -169,22 +178,22 @@ function addItemToOrder(item){
 }
 
 function renderOrderItems(){
-  const div = document.getElementById("order-items");
+  const div=document.getElementById("order-items");
   div.innerHTML="";
   for(const item in currentTable.items){
-    const itemDiv = document.createElement("div");
+    const itemDiv=document.createElement("div");
     itemDiv.className="order-item";
-    itemDiv.textContent = `${item}: ${currentTable.items[item]}`;
-    const minus = document.createElement("button");
+    itemDiv.textContent=`${item}: ${currentTable.items[item]}`;
+    const minus=document.createElement("button");
     minus.textContent="-";
-    minus.onclick = ()=>{
+    minus.onclick=()=>{
       currentTable.items[item]-=1;
       if(currentTable.items[item]<=0) delete currentTable.items[item];
       renderOrderItems();
     };
-    const plus = document.createElement("button");
+    const plus=document.createElement("button");
     plus.textContent="+";
-    plus.onclick = ()=>{
+    plus.onclick=()=>{
       currentTable.items[item]+=1;
       renderOrderItems();
     };
@@ -194,27 +203,34 @@ function renderOrderItems(){
   }
 }
 
-// Закрыть стол
-function closeTable(){
-  const save = document.getElementById("save-order").checked;
-  if(!save) currentTable.items = {};
+// Сохранить заказ кнопкой ✓
+function saveOrder(){
+  // Заказ уже в currentTable.items, просто возвращаемся на главную
   document.getElementById("table-page").classList.add("hidden");
   document.getElementById("main-page").classList.remove("hidden");
   renderTables();
 }
 
-// Личный кабинет
-function goToProfile(){
-  document.getElementById("main-page").classList.add("hidden");
-  document.getElementById("profile-page").classList.remove("hidden");
-  document.getElementById("profile-name").textContent = currentUser.name;
-  document.getElementById("profile-role").textContent = currentUser.role;
-  document.getElementById("profile-username").textContent = currentUser.username;
-}
-
-function backToMain(){
-  document.getElementById("profile-page").classList.add("hidden");
+// Закрыть стол и отправить в Google Sheets
+function closeTable(){
+  const endpoint=data.googleSheetEndpoint;
+  if(endpoint && Object.keys(currentTable.items).length){
+    fetch(endpoint,{
+      method:"POST",
+      headers:{ "Content-Type":"application/json" },
+      body: JSON.stringify({
+        table: currentTable.name,
+        items: currentTable.items,
+        user: currentUser.name,
+        timestamp: new Date().toISOString()
+      })
+    }).then(res=>console.log("Данные отправлены:", res.status))
+      .catch(err=>console.error(err));
+  }
+  currentTable.items={};
+  document.getElementById("table-page").classList.add("hidden");
   document.getElementById("main-page").classList.remove("hidden");
+  renderTables();
 }
 </script>
 

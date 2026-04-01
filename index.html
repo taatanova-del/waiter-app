@@ -10,13 +10,9 @@
   .container { padding:20px; max-width:900px; margin:auto; }
   h1,h2 { margin:10px 0; }
   input { padding:5px; margin:5px 0; width:100%; box-sizing:border-box; }
-  button { padding:5px 10px; margin:5px; cursor:pointer; z-index:10; position:relative; }
+  button { padding:5px 10px; margin:5px; cursor:pointer; }
   .table-card { display:inline-block; padding:15px; margin:5px; border-radius:5px; background:#f0e6d2; color:black; font-weight:bold; min-width:80px; text-align:center; cursor:pointer; }
   .table-card.open { background:lightgreen; }
-  .menu-section { margin-bottom:20px; }
-  .menu-item { display:flex; justify-content:space-between; padding:5px 0; border-bottom:1px solid #ddd; }
-  .menu-item button { margin:0 2px; }
-  .order-item { display:flex; justify-content:space-between; padding:5px 0; border-bottom:1px solid #ccc; }
   .header { display:flex; justify-content:space-between; align-items:center; background:#333; color:white; padding:10px; }
   .header span { cursor:pointer; font-weight:bold; }
 </style>
@@ -36,7 +32,7 @@
 <div id="mainPage" class="container hidden">
   <div class="header">
     <span id="userProfile"></span>
-    <span id="addUserBtn" style="cursor:pointer; color:yellow;"></span>
+    <span id="addUserBtn" style="color:yellow;"></span>
   </div>
   <h2>Столы</h2>
   <div id="tablesContainer"></div>
@@ -46,12 +42,12 @@
 <div id="profilePage" class="container hidden">
   <h1>Личный кабинет</h1>
   <p><b>Имя:</b> <span id="profileName"></span></p>
-  <p><b>Должность:</b> <span id="profileRole"></span></p>
+  <p><b>Роль:</b> <span id="profileRole"></span></p>
   <p><b>Логин:</b> <span id="profileLogin"></span></p>
   <button id="backToMain">Назад</button>
 </div>
 
-<!-- Панель добавления пользователей (только админ) -->
+<!-- Добавление пользователя (только админ) -->
 <div id="addUserPage" class="container hidden">
   <h1>Добавить пользователя</h1>
   <input type="text" id="newUserName" placeholder="Имя">
@@ -65,222 +61,118 @@
   <button id="backFromAddUser">Назад</button>
 </div>
 
-<!-- Страница меню -->
-<div id="menuPage" class="container hidden">
-  <div class="header">
-    <span id="menuUser"></span>
-    <span id="closeTableBtn" style="cursor:pointer; color:red;">Закрыть стол</span>
-  </div>
-  <h2 id="menuTableTitle"></h2>
-  <div id="menuSections"></div>
-  <h3>Заказ</h3>
-  <div id="orderList"></div>
-  <button id="saveOrderBtn">Сохранить</button>
-</div>
-
 <script>
-document.addEventListener('DOMContentLoaded', async () => {
-  const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzKnuVvV3ynr4n6b3r0imUaHS8U91lV7gfQw77B0_47vN-MUSHODk_TcL1p0EK1feSX/exec";
+const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzKnuVvV3ynr4n6b3r0imUaHS8U91lV7gfQw77B0_47vN-MUSHODk_TcL1p0EK1feSX/exec";
 
-  let data = null;
-  let currentUser = null;
-  let currentTable = null;
-  let orders = {}; // { tableName: { itemName: {category, qty} } }
+let data = null;
+let currentUser = null;
 
-  // --- Загрузка данных ---
-  async function loadData(){
+// --- Загрузка данных из Google Sheets ---
+async function loadData() {
+  try {
     const res = await fetch(SCRIPT_URL);
     data = await res.json();
+    console.log("Данные загружены:", data);
+  } catch(e){
+    console.error("Ошибка загрузки данных:", e);
+    document.getElementById('loginError').innerText = "Не удалось загрузить данные";
   }
-  await loadData();
+}
 
-  // --- Авторизация ---
-  const loginBtn = document.getElementById('loginBtn');
-  loginBtn.addEventListener('click', ()=>{
-    const u = document.getElementById('username').value.trim();
-    const p = document.getElementById('password').value.trim();
+await loadData();
 
-    if(!data){ 
-        document.getElementById('loginError').innerText="Данные не загружены"; 
-        return; 
-    }
+// --- Авторизация ---
+document.getElementById('loginBtn').addEventListener('click', ()=>{
+  const u = document.getElementById('username').value.trim();
+  const p = document.getElementById('password').value.trim();
 
-    const user = data.users.find(x=>x.username===u);
+  if(!data || !data.users){ 
+      document.getElementById('loginError').innerText="Данные пользователей не загружены"; 
+      return; 
+  }
 
-    if(!user){
-        document.getElementById('loginError').innerText = "Пользователь не найден";
-        return;
-    }
+  const user = data.users.find(x=>x.username === u);
+  if(!user){
+      document.getElementById('loginError').innerText = "Пользователь не найден";
+      return;
+  }
 
-    if(String(user.password) !== p){
-        document.getElementById('loginError').innerText = "Неверный пароль";
-        return;
-    }
+  if(String(user.password) !== p){
+      document.getElementById('loginError').innerText = "Неверный пароль";
+      return;
+  }
 
-    currentUser = user;
-    document.getElementById('loginPage').classList.add('hidden');
-    document.getElementById('loginError').innerText = "";
-    showMainPage();
+  currentUser = user;
+  document.getElementById('loginError').innerText = "";
+  document.getElementById('loginPage').classList.add('hidden');
+  showMainPage();
+});
+
+// --- Главная страница ---
+function showMainPage(){
+  document.getElementById('mainPage').classList.remove('hidden');
+  document.getElementById('userProfile').innerText = currentUser.username;
+  document.getElementById('userProfile').onclick = ()=>{ showProfile(); };
+
+  const addUserBtn = document.getElementById('addUserBtn');
+  if(currentUser.role === 'admin'){
+    addUserBtn.innerText = "Добавить пользователя";
+    addUserBtn.onclick = ()=>{ showAddUserPage(); };
+  } else addUserBtn.innerText = "";
+
+  renderTables();
+}
+
+function renderTables(){
+  const container = document.getElementById('tablesContainer');
+  container.innerHTML = "";
+  if(!data.tables) return;
+  data.tables.forEach(t=>{
+    const div = document.createElement('div');
+    div.className = 'table-card';
+    div.innerText = t.name;
+    div.onclick = ()=>{ alert("Здесь откроется меню для " + t.name); };
+    container.appendChild(div);
   });
+}
 
-  // --- Главная страница ---
-  function showMainPage(){
-    document.getElementById('mainPage').classList.remove('hidden');
-    document.getElementById('userProfile').innerText = currentUser.username;
-    document.getElementById('userProfile').onclick = ()=>{ showProfile(); };
-    
-    const addUserBtn = document.getElementById('addUserBtn');
-    if(currentUser.role === 'admin'){
-      addUserBtn.innerText = "Добавить пользователя";
-      addUserBtn.onclick = ()=>{ showAddUserPage(); };
-    } else addUserBtn.innerText = "";
+// --- Личный кабинет ---
+function showProfile(){
+  document.getElementById('mainPage').classList.add('hidden');
+  document.getElementById('profilePage').classList.remove('hidden');
+  document.getElementById('profileName').innerText = currentUser.username;
+  document.getElementById('profileRole').innerText = currentUser.role;
+  document.getElementById('profileLogin').innerText = currentUser.username;
+}
 
-    renderTables();
+document.getElementById('backToMain').addEventListener('click', ()=>{
+  document.getElementById('profilePage').classList.add('hidden');
+  showMainPage();
+});
+
+// --- Добавление пользователей ---
+function showAddUserPage(){
+  document.getElementById('mainPage').classList.add('hidden');
+  document.getElementById('addUserPage').classList.remove('hidden');
+}
+
+document.getElementById('backFromAddUser').addEventListener('click', ()=>{
+  document.getElementById('addUserPage').classList.add('hidden');
+  showMainPage();
+});
+
+document.getElementById('createUserBtn').addEventListener('click', ()=>{
+  const name = document.getElementById('newUserName').value.trim();
+  const login = document.getElementById('newUserLogin').value.trim();
+  const pass = document.getElementById('newUserPass').value.trim();
+  const role = document.getElementById('newUserRole').value;
+  if(name && login && pass){
+    data.users.push({username:login, password:pass, role:role});
+    alert("Пользователь добавлен!");
+    document.getElementById('newUserName').value="";
+    document.getElementById('newUserLogin').value="";
+    document.getElementById('newUserPass').value="";
   }
-
-  function renderTables(){
-    const container = document.getElementById('tablesContainer');
-    container.innerHTML = "";
-    data.tables.forEach(t=>{
-      const div = document.createElement('div');
-      div.className = 'table-card'+(orders[t.name] && Object.keys(orders[t.name]).length>0 ? ' open' : '');
-      div.innerText = t.name;
-      div.onclick = ()=>{ openTable(t); };
-      container.appendChild(div);
-    });
-  }
-
-  // --- Личный кабинет ---
-  function showProfile(){
-    document.getElementById('mainPage').classList.add('hidden');
-    document.getElementById('profilePage').classList.remove('hidden');
-    document.getElementById('profileName').innerText = currentUser.username;
-    document.getElementById('profileRole').innerText = currentUser.role;
-    document.getElementById('profileLogin').innerText = currentUser.username;
-  }
-
-  document.getElementById('backToMain').addEventListener('click', ()=>{
-    document.getElementById('profilePage').classList.add('hidden');
-    showMainPage();
-  });
-
-  // --- Панель добавления пользователей ---
-  function showAddUserPage(){
-    document.getElementById('mainPage').classList.add('hidden');
-    document.getElementById('addUserPage').classList.remove('hidden');
-  }
-
-  document.getElementById('backFromAddUser').addEventListener('click', ()=>{
-    document.getElementById('addUserPage').classList.add('hidden');
-    showMainPage();
-  });
-
-  document.getElementById('createUserBtn').addEventListener('click', ()=>{
-    const name = document.getElementById('newUserName').value.trim();
-    const login = document.getElementById('newUserLogin').value.trim();
-    const pass = document.getElementById('newUserPass').value.trim();
-    const role = document.getElementById('newUserRole').value;
-    if(name && login && pass){
-      data.users.push({username:login, password:pass, role:role});
-      alert("Пользователь добавлен!");
-      document.getElementById('newUserName').value="";
-      document.getElementById('newUserLogin').value="";
-      document.getElementById('newUserPass').value="";
-    }
-  });
-
-  // --- Меню ---
-  function openTable(table){
-    currentTable = table;
-    if(!orders[table.name]) orders[table.name]={};
-    document.getElementById('mainPage').classList.add('hidden');
-    document.getElementById('menuPage').classList.remove('hidden');
-    document.getElementById('menuUser').innerText = currentUser.username;
-    document.getElementById('menuTableTitle').innerText = table.name;
-    renderMenu();
-    renderOrder();
-  }
-
-  function renderMenu(){
-    const container = document.getElementById('menuSections');
-    container.innerHTML = "";
-    for(const category in data.menu){
-      const sec = document.createElement('div');
-      sec.className = 'menu-section';
-      const h3 = document.createElement('h3');
-      h3.innerText = category;
-      sec.appendChild(h3);
-      data.menu[category].forEach(item=>{
-        const div = document.createElement('div');
-        div.className='menu-item';
-        div.innerHTML=`<span>${item}</span>`;
-        const addBtn = document.createElement('button');
-        addBtn.innerText='+';
-        addBtn.onclick=()=>{ addOrder(category,item,1); };
-        div.appendChild(addBtn);
-        sec.appendChild(div);
-      });
-      container.appendChild(sec);
-    }
-  }
-
-  function addOrder(category,item,qty){
-    if(!orders[currentTable.name][item]) orders[currentTable.name][item]={category:category, qty:0};
-    orders[currentTable.name][item].qty+=qty;
-    renderOrder();
-  }
-
-  function renderOrder(){
-    const container = document.getElementById('orderList');
-    container.innerHTML = "";
-    for(const item in orders[currentTable.name]){
-      const o = orders[currentTable.name][item];
-      const div = document.createElement('div');
-      div.className='order-item';
-      const nameSpan = document.createElement('span');
-      nameSpan.innerText = item;
-      const controls = document.createElement('span');
-      const minus = document.createElement('button'); minus.innerText='-';
-      const plus = document.createElement('button'); plus.innerText='+';
-      const qtySpan = document.createElement('span'); qtySpan.innerText=o.qty;
-      minus.onclick = ()=>{ if(o.qty>0){ o.qty--; if(o.qty===0) delete orders[currentTable.name][item]; renderOrder(); } };
-      plus.onclick = ()=>{ o.qty++; renderOrder(); };
-      controls.appendChild(minus); controls.appendChild(qtySpan); controls.appendChild(plus);
-      div.appendChild(nameSpan); div.appendChild(controls);
-      container.appendChild(div);
-    }
-  }
-
-  // --- Сохранение заказа ---
-  document.getElementById('saveOrderBtn').addEventListener('click', ()=>{
-    document.getElementById('menuPage').classList.add('hidden');
-    showMainPage();
-  });
-
-  // --- Закрытие стола ---
-  document.getElementById('closeTableBtn').addEventListener('click', async ()=>{
-    for(const item in orders[currentTable.name]){
-      const o = orders[currentTable.name][item];
-      await fetch(SCRIPT_URL, {
-        method:'POST',
-        headers:{'Content-Type':'application/json'},
-        body: JSON.stringify({
-          date: new Date().toLocaleDateString(),
-          time: new Date().toLocaleTimeString(),
-          table: currentTable.name,
-          category: o.category,
-          item: item,
-          qty: o.qty,
-          user: currentUser.username
-        })
-      });
-    }
-    orders[currentTable.name]={};
-    currentTable.items={};
-    document.getElementById('menuPage').classList.add('hidden');
-    showMainPage();
-  });
-
 });
 </script>
 </body>

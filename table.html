@@ -1,1 +1,27 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="style.css">
+</head>
+<body onload="loadMenuAndOrder()">
+    <div class="container">
+        <button class="btn btn-back" onclick="location.href='main.html'">← Назад</button>
+        <h2>Стол №<span id="tableNum"></span></h2>
+        
+        <div class="section">
+            <h2>Меню</h2>
+            <div id="menuContent"></div>
+        </div>
 
+        <div class="section" style="border-top: 4px solid var(--green);">
+            <h2>Заказ</h2>
+            <div id="orderList"></div>
+            <button class="btn btn-save" onclick="saveOrder()">Сохранить заказ</button>
+            <button class="btn btn-close" onclick="closeTable()">Закрыть стол (Расчёт)</button>
+        </div>
+    </div>
+    <script src="script.js"></script>
+</body>
+</html>

@@ -1,35 +1,25 @@
-:root {
-    --green: #2ecc71;
-    --beige: #f5f5dc;
-    --black: #2c3e50;
-    --white: #ffffff;
-    --shadow: 0 4px 10px rgba(0,0,0,0.1);
-}
+body { font-family: sans-serif; margin: 0; background: #f0f2f5; height: 100vh; overflow: hidden; }
+.container { max-width: 600px; margin: auto; height: 100%; display: flex; flex-direction: column; }
 
-body { font-family: 'Segoe UI', sans-serif; margin: 0; background: #f4f7f6; color: var(--black); height: 100vh; overflow: hidden; }
-.container { padding: 15px; max-width: 800px; margin: auto; height: 100%; display: flex; flex-direction: column; }
+/* Столы */
+.grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; padding: 20px; }
+.table-card { height: 80px; border-radius: 10px; border: none; font-weight: bold; cursor: pointer; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
+.open { background: #2ecc71; color: white; }
+.empty { background: #f5f5dc; color: #000; }
 
-/* Сетка столов */
-.grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(110px, 1fr)); gap: 10px; }
-.table-card { height: 80px; border-radius: 12px; border: none; font-weight: bold; cursor: pointer; box-shadow: var(--shadow); }
-.open { background: var(--green); color: white; }
-.empty { background: var(--beige); color: black; }
+/* Разделение экрана */
+.top-section { flex: 1; overflow-y: auto; background: white; padding: 15px; border-bottom: 2px solid #ddd; }
+.bottom-section { height: 35%; background: #2c3e50; color: white; padding: 15px; display: flex; flex-direction: column; }
 
-/* Разделение экрана на странице стола */
-.menu-upper { flex: 1; overflow-y: auto; background: #fff; border-radius: 15px; padding: 15px; margin-bottom: 10px; box-shadow: var(--shadow); }
-.order-lower { height: 40%; overflow-y: auto; background: var(--black); color: white; border-radius: 15px 15px 0 0; padding: 15px; }
+/* Кнопки меню */
+.menu-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.btn-menu { padding: 20px 10px; border: none; border-radius: 8px; background: #ecf0f1; font-weight: bold; cursor: pointer; }
+.item-btn { background: #3498db; color: white; }
 
-/* Кнопки категорий и товаров */
-.menu-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; }
-.btn-menu { padding: 20px 10px; border: none; border-radius: 10px; background: #ecf0f1; font-weight: bold; cursor: pointer; font-size: 1rem; }
-.btn-item { background: #3498db; color: white; }
+/* Заказ */
+.order-row { display: flex; justify-content: space-between; padding: 5px 0; border-bottom: 1px solid #444; }
+.qty-btns button { width: 25px; height: 25px; border: none; border-radius: 4px; cursor: pointer; }
 
-/* Кнопки управления */
-.btn { padding: 12px; border: none; border-radius: 8px; font-weight: bold; cursor: pointer; width: 100%; margin-top: 5px; }
-.btn-save { background: var(--green); color: white; }
-.btn-close { background: #e74c3c; color: white; }
-.btn-back { background: #95a5a6; color: white; margin-bottom: 10px; }
-.btn-refresh { background: #f39c12; color: white; margin-top: 20px; }
-
-.item-row { display: flex; justify-content: space-between; align-items: center; padding: 8px 0; border-bottom: 1px solid #444; }
-.qty-btn { width: 30px; height: 30px; border-radius: 50%; border: none; background: #fff; cursor: pointer; font-weight: bold; }
+/* Общие кнопки */
+.btn { width: 100%; padding: 12px; border-radius: 8px; border: none; font-weight: bold; cursor: pointer; margin-top: 5px; }
+input { width: 100%; padding: 12px; margin: 8px 0; border: 1px solid #ccc; border-radius: 8px; box-sizing: border-box; }

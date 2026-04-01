@@ -1,52 +1,59 @@
-const SCRIPT_URL = "Вhttps://script.google.com/macros/s/AKfycbzXM3XH848SHHxu5Dci5uascEWoI1m4BI-Y2Tha8Qq_d_GJsrGfJDDiR-rW8pgsZoAk/exec";
+const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzXM3XH848SHHxu5Dci5uascEWoI1m4BI-Y2Tha8Qq_d_GJsrGfJDDiR-rW8pgsZoAk/exec";
 
-// Загрузка данных из Google Sheets в LocalStorage
-async function syncData() {
-    try {
-        const res = await fetch(SCRIPT_URL);
-        const data = await res.json();
-        localStorage.setItem('appData', JSON.stringify(data));
-        alert("Данные успешно обновлены!");
-        location.reload();
-    } catch (e) {
-        alert("Ошибка обновления: " + e);
-    }
-}
-
-// Получение данных (из кэша или из сети если кэш пуст)
-async function getAppData() {
+// 1. ПОЛУЧЕНИЕ ДАННЫХ С КЭШИРОВАНИЕМ
+async function getAppData(forceRefresh = false) {
     let data = localStorage.getItem('appData');
-    if (!data) {
-        const res = await fetch(SCRIPT_URL);
-        data = await res.json();
-        localStorage.setItem('appData', JSON.stringify(data));
-        return data;
+    
+    // Если данных нет в памяти или нажата кнопка "Обновить"
+    if (!data || forceRefresh) {
+        console.log("Загрузка данных из Google Sheets...");
+        try {
+            const res = await fetch(SCRIPT_URL);
+            const json = await res.json();
+            localStorage.setItem('appData', JSON.stringify(json));
+            return json;
+        } catch (e) {
+            alert("Ошибка сети. Проверьте SCRIPT_URL.");
+            return null;
+        }
     }
     return JSON.parse(data);
 }
 
-// АВТОРИЗАЦИЯ
+// 2. ВХОД В СИСТЕМУ
 async function login() {
-    const userVal = document.getElementById('login').value;
-    const passVal = document.getElementById('pass').value;
+    const userInp = document.getElementById('login').value.trim();
+    const passInp = document.getElementById('pass').value.trim();
+    const errorEl = document.getElementById('error');
+
+    errorEl.innerText = "Проверка...";
+
     const data = await getAppData();
-    const found = data.users.find(u => u.login == userVal && u.pass.toString() == passVal);
+    if (!data) return;
+
+    const found = data.users.find(u => 
+        u.login.toString().toLowerCase() === userInp.toLowerCase() && 
+        u.pass.toString() === passInp
+    );
 
     if (found) {
         localStorage.setItem('currentUser', JSON.stringify(found));
         location.href = 'main.html';
     } else {
-        document.getElementById('error').innerText = "Ошибка входа";
+        errorEl.innerText = "Неверный логин или пароль";
     }
 }
 
-// ГЛАВНАЯ СТРАНИЦА
+// 3. ГЛАВНАЯ (СТОЛЫ)
 async function loadTables() {
     const user = JSON.parse(localStorage.getItem('currentUser'));
+    if (!user) { location.href = 'index.html'; return; }
     document.getElementById('userName').innerText = user.name;
+
     const data = await getAppData();
     const activeOrders = JSON.parse(localStorage.getItem('activeOrders')) || {};
     const grid = document.getElementById('tablesGrid');
+    grid.innerHTML = "";
 
     data.tables.forEach(t => {
         const isOpened = !!activeOrders[t.number];
@@ -61,16 +68,16 @@ async function loadTables() {
     });
 }
 
-// СТРАНИЦА СТОЛА
+// 4. СТРАНИЦА СТОЛА (РАЗДЕЛЕННЫЙ ЭКРАН)
 let currentOrder = [];
-let allMenu = [];
+let menuData = [];
 
-async function initTablePage() {
+async function initTable() {
     const tableId = localStorage.getItem('currentTable');
     document.getElementById('tableNum').innerText = tableId;
-    
+
     const data = await getAppData();
-    allMenu = data.menu;
+    menuData = data.menu;
 
     const activeOrders = JSON.parse(localStorage.getItem('activeOrders')) || {};
     currentOrder = activeOrders[tableId] || [];
@@ -81,9 +88,9 @@ async function initTablePage() {
 
 function showCategories() {
     const menuDiv = document.getElementById('menuContent');
-    const categories = [...new Set(allMenu.map(m => m.category))];
+    const categories = [...new Set(menuData.map(m => m.category))];
     
-    menuDiv.innerHTML = `<h3>Категории</h3><div class="menu-grid"></div>`;
+    menuDiv.innerHTML = `<div class="menu-grid"></div>`;
     const grid = menuDiv.querySelector('.menu-grid');
 
     categories.forEach(cat => {
@@ -95,30 +102,25 @@ function showCategories() {
     });
 }
 
-function showItems(category) {
+function showItems(catName) {
     const menuDiv = document.getElementById('menuContent');
-    menuDiv.innerHTML = `<h3>${category}</h3><div class="menu-grid"></div>`;
+    menuDiv.innerHTML = `<button class="btn" onclick="showCategories()" style="background:#7f8c8d; color:white; margin-bottom:10px">← Назад к категориям</button>
+                         <div class="menu-grid"></div>`;
     const grid = menuDiv.querySelector('.menu-grid');
 
-    allMenu.filter(m => m.category === category).forEach(item => {
+    menuData.filter(m => m.category === catName).forEach(item => {
         const btn = document.createElement('button');
-        btn.className = 'btn-menu btn-item';
+        btn.className = 'btn-menu item-btn';
         btn.innerText = item.name;
         btn.onclick = () => {
-            addToOrder(item);
-            showCategories(); // Автовозврат к категориям
+            addItem(item);
+            showCategories(); // АВТОВОЗВРАТ ПОСЛЕ ВЫБОРА
         };
         grid.appendChild(btn);
     });
-    
-    const backBtn = document.createElement('button');
-    backBtn.className = 'btn';
-    backBtn.innerText = '← К категориям';
-    backBtn.onclick = showCategories;
-    menuDiv.appendChild(backBtn);
 }
 
-function addToOrder(item) {
+function addItem(item) {
     const existing = currentOrder.find(i => i.name === item.name);
     if (existing) existing.quantity++;
     else currentOrder.push({ name: item.name, category: item.category, quantity: 1 });
@@ -135,19 +137,18 @@ function updateQty(name, delta) {
 function renderOrder() {
     const list = document.getElementById('orderList');
     list.innerHTML = currentOrder.map(i => `
-        <div class="item-row">
+        <div class="order-row">
             <span>${i.name}</span>
-            <div class="qty-controls">
-                <button class="qty-btn" onclick="updateQty('${i.name}', -1)">-</button>
-                <span style="margin: 0 10px">${i.quantity}</span>
-                <button class="qty-btn" onclick="updateQty('${i.name}', 1)">+</button>
+            <div class="qty-btns">
+                <button onclick="updateQty('${i.name}', -1)">-</button>
+                <span>${i.quantity}</span>
+                <button onclick="updateQty('${i.name}', 1)">+</button>
             </div>
         </div>
     `).join('');
 }
 
-// СОХРАНЕНИЕ И ЗАКРЫТИЕ
-function saveOrder() {
+function saveLocal() {
     const tableId = localStorage.getItem('currentTable');
     const allOrders = JSON.parse(localStorage.getItem('activeOrders')) || {};
     if (currentOrder.length > 0) allOrders[tableId] = currentOrder;
@@ -158,18 +159,32 @@ function saveOrder() {
 
 async function closeTable() {
     if (currentOrder.length === 0) return;
-    if (!confirm("Закрыть стол?")) return;
+    if (!confirm("Закрыть стол и отправить в отчет?")) return;
 
     const user = JSON.parse(localStorage.getItem('currentUser'));
     const tableId = localStorage.getItem('currentTable');
 
-    const data = { action: 'closeTable', tableId, userName: user.name, items: currentOrder };
-    
+    const payload = {
+        action: 'closeTable',
+        tableId: tableId,
+        userName: user.name,
+        items: currentOrder
+    };
+
     document.body.style.opacity = "0.5";
-    await fetch(SCRIPT_URL, { method: 'POST', body: JSON.stringify(data) });
+    await fetch(SCRIPT_URL, { method: 'POST', body: JSON.stringify(payload) });
     
     const allOrders = JSON.parse(localStorage.getItem('activeOrders')) || {};
     delete allOrders[tableId];
     localStorage.setItem('activeOrders', JSON.stringify(allOrders));
     location.href = 'main.html';
+}
+
+// 5. АДМИН: СИНХРОНИЗАЦИЯ
+async function adminRefresh() {
+    if (confirm("Обновить меню и столы из Google Таблиц?")) {
+        await getAppData(true);
+        alert("Данные обновлены!");
+        location.reload();
+    }
 }

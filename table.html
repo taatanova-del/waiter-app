@@ -2,24 +2,29 @@
 <html>
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <link rel="stylesheet" href="style.css">
 </head>
-<body onload="loadMenuAndOrder()">
+<body onload="initTablePage()">
     <div class="container">
-        <button class="btn btn-back" onclick="location.href='main.html'">← Назад</button>
-        <h2>Стол №<span id="tableNum"></span></h2>
-        
-        <div class="section">
-            <h2>Меню</h2>
+        <!-- ВЕРХНЯЯ ЧАСТЬ: МЕНЮ -->
+        <div class="menu-upper">
+            <div style="display:flex; justify-content: space-between; align-items:center">
+                <h2 style="margin:0">Стол №<span id="tableNum"></span></h2>
+                <button class="btn btn-back" style="width:auto; margin:0" onclick="saveOrder()">Назад</button>
+            </div>
+            <hr>
             <div id="menuContent"></div>
         </div>
 
-        <div class="section" style="border-top: 4px solid var(--green);">
-            <h2>Заказ</h2>
-            <div id="orderList"></div>
-            <button class="btn btn-save" onclick="saveOrder()">Сохранить заказ</button>
-            <button class="btn btn-close" onclick="closeTable()">Закрыть стол (Расчёт)</button>
+        <!-- НИЖНЯЯ ЧАСТЬ: ЗАКАЗ -->
+        <div class="order-lower">
+            <h3 style="margin-top:0">Текущий заказ</h3>
+            <div id="orderList" style="max-height: 120px; overflow-y: auto; margin-bottom:10px"></div>
+            <div style="display:flex; gap:10px">
+                <button class="btn btn-save" onclick="saveOrder()">Сохранить</button>
+                <button class="btn btn-close" onclick="closeTable()">Оплатить</button>
+            </div>
         </div>
     </div>
     <script src="script.js"></script>

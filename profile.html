@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<title>Личный кабинет</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<h2>Личный кабинет</h2>
+<div id="profile"></div>
+<button onclick="back()">Назад</button>
+
+<script>
+const user = JSON.parse(localStorage.getItem("currentUser"));
+if(!user) window.location.href="index.html";
+
+document.getElementById("profile").innerHTML = `
+<p>Имя: ${user.username}</p>
+<p>Роль: ${user.role}</p>
+`;
+
+function back(){ window.location.href="main.html"; }
+</script>
+</body>
+</html>

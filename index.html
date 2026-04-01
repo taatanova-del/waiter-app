@@ -1,34 +1,18 @@
 <!DOCTYPE html>
 <html lang="ru">
 <head>
-<meta charset="UTF-8">
-<title>Авторизация</title>
-<link rel="stylesheet" href="style.css">
+  <meta charset="UTF-8">
+  <title>Авторизация</title>
+  <link rel="stylesheet" href="style.css">
 </head>
 <body>
-<div class="login-container">
-  <h2>Вход</h2>
-  <input type="text" id="username" placeholder="Логин">
-  <input type="password" id="password" placeholder="Пароль">
-  <button id="loginBtn">Войти</button>
-  <p id="loginError" class="error"></p>
-</div>
-
-<script src="script.js"></script>
-<script>
-document.getElementById('loginBtn').onclick = async () => {
-  await loadData();
-  const u = document.getElementById('username').value.trim();
-  const p = document.getElementById('password').value.trim();
-  if(!data){ document.getElementById('loginError').innerText = "Не удалось загрузить данные"; return; }
-
-  const user = data.users.find(x => x.username === u);
-  if(!user){ document.getElementById('loginError').innerText = "Пользователь не найден"; return; }
-  if(String(user.password) !== p){ document.getElementById('loginError').innerText = "Неверный пароль"; return; }
-
-  localStorage.setItem("currentUser", JSON.stringify(user));
-  window.location.href = "main.html";
-}
-</script>
+  <div class="login-container">
+    <h2>Вход</h2>
+    <input type="text" id="username" placeholder="Логин">
+    <input type="password" id="password" placeholder="Пароль">
+    <button id="loginBtn">Войти</button>
+    <p class="error" id="loginError"></p>
+  </div>
+  <script src="script.js"></script>
 </body>
 </html>

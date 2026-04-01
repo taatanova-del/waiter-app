@@ -1,40 +1,53 @@
-const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzXM3XH848SHHxu5Dci5uascEWoI1m4BI-Y2Tha8Qq_d_GJsrGfJDDiR-rW8pgsZoAk/exec";
+const SCRIPT_URL = "Вhttps://script.google.com/macros/s/AKfycbzXM3XH848SHHxu5Dci5uascEWoI1m4BI-Y2Tha8Qq_d_GJsrGfJDDiR-rW8pgsZoAk/exec";
 
-// 1. Авторизация
-async function login() {
-    const userVal = document.getElementById('login').value;
-    const passVal = document.getElementById('pass').value;
-    const errorEl = document.getElementById('error');
-
+// Загрузка данных из Google Sheets в LocalStorage
+async function syncData() {
     try {
         const res = await fetch(SCRIPT_URL);
         const data = await res.json();
-        const found = data.users.find(u => u.login == userVal && u.pass.toString() == passVal);
-
-        if (found) {
-            localStorage.setItem('currentUser', JSON.stringify(found));
-            location.href = 'main.html';
-        } else {
-            errorEl.innerText = "Неверный логин или пароль";
-        }
+        localStorage.setItem('appData', JSON.stringify(data));
+        alert("Данные успешно обновлены!");
+        location.reload();
     } catch (e) {
-        alert("Ошибка подключения к серверу");
+        alert("Ошибка обновления: " + e);
     }
 }
 
-// 2. Главная страница (Столы)
+// Получение данных (из кэша или из сети если кэш пуст)
+async function getAppData() {
+    let data = localStorage.getItem('appData');
+    if (!data) {
+        const res = await fetch(SCRIPT_URL);
+        data = await res.json();
+        localStorage.setItem('appData', JSON.stringify(data));
+        return data;
+    }
+    return JSON.parse(data);
+}
+
+// АВТОРИЗАЦИЯ
+async function login() {
+    const userVal = document.getElementById('login').value;
+    const passVal = document.getElementById('pass').value;
+    const data = await getAppData();
+    const found = data.users.find(u => u.login == userVal && u.pass.toString() == passVal);
+
+    if (found) {
+        localStorage.setItem('currentUser', JSON.stringify(found));
+        location.href = 'main.html';
+    } else {
+        document.getElementById('error').innerText = "Ошибка входа";
+    }
+}
+
+// ГЛАВНАЯ СТРАНИЦА
 async function loadTables() {
     const user = JSON.parse(localStorage.getItem('currentUser'));
-    if (!user) { location.href = 'index.html'; return; }
     document.getElementById('userName').innerText = user.name;
-
-    const grid = document.getElementById('tablesGrid');
+    const data = await getAppData();
     const activeOrders = JSON.parse(localStorage.getItem('activeOrders')) || {};
+    const grid = document.getElementById('tablesGrid');
 
-    const res = await fetch(SCRIPT_URL);
-    const data = await res.json();
-
-    grid.innerHTML = "";
     data.tables.forEach(t => {
         const isOpened = !!activeOrders[t.number];
         const btn = document.createElement('button');
@@ -48,40 +61,67 @@ async function loadTables() {
     });
 }
 
-// 3. Страница стола (Меню и Заказ)
+// СТРАНИЦА СТОЛА
 let currentOrder = [];
+let allMenu = [];
 
-async function loadMenuAndOrder() {
+async function initTablePage() {
     const tableId = localStorage.getItem('currentTable');
     document.getElementById('tableNum').innerText = tableId;
     
-    const allOrders = JSON.parse(localStorage.getItem('activeOrders')) || {};
-    currentOrder = allOrders[tableId] || [];
-    renderOrder();
+    const data = await getAppData();
+    allMenu = data.menu;
 
-    const res = await fetch(SCRIPT_URL);
-    const data = await res.json();
-    const menuDiv = document.getElementById('menuContent');
+    const activeOrders = JSON.parse(localStorage.getItem('activeOrders')) || {};
+    currentOrder = activeOrders[tableId] || [];
     
-    const categories = [...new Set(data.menu.map(m => m.category))];
+    renderOrder();
+    showCategories();
+}
+
+function showCategories() {
+    const menuDiv = document.getElementById('menuContent');
+    const categories = [...new Set(allMenu.map(m => m.category))];
+    
+    menuDiv.innerHTML = `<h3>Категории</h3><div class="menu-grid"></div>`;
+    const grid = menuDiv.querySelector('.menu-grid');
+
     categories.forEach(cat => {
-        const catBox = document.createElement('div');
-        catBox.innerHTML = `<h3>${cat}</h3>`;
-        data.menu.filter(m => m.category === cat).forEach(item => {
-            const div = document.createElement('div');
-            div.className = 'item-row';
-            div.innerHTML = `<span>${item.name} (${item.price}₽)</span> 
-                <button class="btn btn-add" onclick='addToOrder(${JSON.stringify(item)})'>+</button>`;
-            catBox.appendChild(div);
-        });
-        menuDiv.appendChild(catBox);
+        const btn = document.createElement('button');
+        btn.className = 'btn-menu';
+        btn.innerText = cat;
+        btn.onclick = () => showItems(cat);
+        grid.appendChild(btn);
     });
+}
+
+function showItems(category) {
+    const menuDiv = document.getElementById('menuContent');
+    menuDiv.innerHTML = `<h3>${category}</h3><div class="menu-grid"></div>`;
+    const grid = menuDiv.querySelector('.menu-grid');
+
+    allMenu.filter(m => m.category === category).forEach(item => {
+        const btn = document.createElement('button');
+        btn.className = 'btn-menu btn-item';
+        btn.innerText = item.name;
+        btn.onclick = () => {
+            addToOrder(item);
+            showCategories(); // Автовозврат к категориям
+        };
+        grid.appendChild(btn);
+    });
+    
+    const backBtn = document.createElement('button');
+    backBtn.className = 'btn';
+    backBtn.innerText = '← К категориям';
+    backBtn.onclick = showCategories;
+    menuDiv.appendChild(backBtn);
 }
 
 function addToOrder(item) {
     const existing = currentOrder.find(i => i.name === item.name);
     if (existing) existing.quantity++;
-    else currentOrder.push({...item, quantity: 1});
+    else currentOrder.push({ name: item.name, category: item.category, quantity: 1 });
     renderOrder();
 }
 
@@ -99,13 +139,14 @@ function renderOrder() {
             <span>${i.name}</span>
             <div class="qty-controls">
                 <button class="qty-btn" onclick="updateQty('${i.name}', -1)">-</button>
-                <b>${i.quantity}</b>
+                <span style="margin: 0 10px">${i.quantity}</span>
                 <button class="qty-btn" onclick="updateQty('${i.name}', 1)">+</button>
             </div>
         </div>
     `).join('');
 }
 
+// СОХРАНЕНИЕ И ЗАКРЫТИЕ
 function saveOrder() {
     const tableId = localStorage.getItem('currentTable');
     const allOrders = JSON.parse(localStorage.getItem('activeOrders')) || {};
@@ -117,7 +158,7 @@ function saveOrder() {
 
 async function closeTable() {
     if (currentOrder.length === 0) return;
-    if (!confirm("Закрыть стол и отправить данные в систему?")) return;
+    if (!confirm("Закрыть стол?")) return;
 
     const user = JSON.parse(localStorage.getItem('currentUser'));
     const tableId = localStorage.getItem('currentTable');

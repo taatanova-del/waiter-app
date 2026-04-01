@@ -5,16 +5,16 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Система заказов</title>
 <style>
-  body { font-family: Arial, sans-serif; margin:0; padding:0; background:#f5f5f5; }
-  .hidden { display:none; }
-  .container { padding:20px; max-width:900px; margin:auto; }
-  h1,h2 { margin:10px 0; }
-  input { padding:5px; margin:5px 0; width:100%; box-sizing:border-box; }
-  button { padding:5px 10px; margin:5px; cursor:pointer; }
-  .table-card { display:inline-block; padding:15px; margin:5px; border-radius:5px; background:#f0e6d2; color:black; font-weight:bold; min-width:80px; text-align:center; cursor:pointer; }
-  .table-card.open { background:lightgreen; }
-  .header { display:flex; justify-content:space-between; align-items:center; background:#333; color:white; padding:10px; }
-  .header span { cursor:pointer; font-weight:bold; }
+body { font-family: Arial, sans-serif; margin:0; padding:0; background:#f5f5f5; }
+.hidden { display:none; }
+.container { padding:20px; max-width:900px; margin:auto; }
+h1,h2 { margin:10px 0; }
+input { padding:5px; margin:5px 0; width:100%; box-sizing:border-box; }
+button { padding:5px 10px; margin:5px; cursor:pointer; }
+.table-card { display:inline-block; padding:15px; margin:5px; border-radius:5px; background:#f0e6d2; color:black; font-weight:bold; min-width:80px; text-align:center; cursor:pointer; }
+.table-card.open { background:lightgreen; }
+.header { display:flex; justify-content:space-between; align-items:center; background:#333; color:white; padding:10px; }
+.header span { cursor:pointer; font-weight:bold; }
 </style>
 </head>
 <body>
@@ -62,34 +62,25 @@
 </div>
 
 <script>
-const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzKnuVvV3ynr4n6b3r0imUaHS8U91lV7gfQw77B0_47vN-MUSHODk_TcL1p0EK1feSX/exec";
+// --- Локальные данные для теста ---
+let data = {
+  users: [
+    {username:"tatiana", password:"1234", role:"admin"},
+    {username:"nikita", password:"1234", role:"user"}
+  ],
+  tables:[
+    {id:1,name:"Стол 1", items:{}},
+    {id:2,name:"Стол 2", items:{}},
+    {id:3,name:"Стол 3", items:{}}
+  ]
+};
 
-let data = null;
 let currentUser = null;
-
-// --- Загрузка данных из Google Sheets ---
-async function loadData() {
-  try {
-    const res = await fetch(SCRIPT_URL);
-    data = await res.json();
-    console.log("Данные загружены:", data);
-  } catch(e){
-    console.error("Ошибка загрузки данных:", e);
-    document.getElementById('loginError').innerText = "Не удалось загрузить данные";
-  }
-}
-
-await loadData();
 
 // --- Авторизация ---
 document.getElementById('loginBtn').addEventListener('click', ()=>{
   const u = document.getElementById('username').value.trim();
   const p = document.getElementById('password').value.trim();
-
-  if(!data || !data.users){ 
-      document.getElementById('loginError').innerText="Данные пользователей не загружены"; 
-      return; 
-  }
 
   const user = data.users.find(x=>x.username === u);
   if(!user){
@@ -97,7 +88,7 @@ document.getElementById('loginBtn').addEventListener('click', ()=>{
       return;
   }
 
-  if(String(user.password) !== p){
+  if(user.password !== p){
       document.getElementById('loginError').innerText = "Неверный пароль";
       return;
   }
@@ -126,12 +117,11 @@ function showMainPage(){
 function renderTables(){
   const container = document.getElementById('tablesContainer');
   container.innerHTML = "";
-  if(!data.tables) return;
   data.tables.forEach(t=>{
     const div = document.createElement('div');
     div.className = 'table-card';
     div.innerText = t.name;
-    div.onclick = ()=>{ alert("Здесь откроется меню для " + t.name); };
+    div.onclick = ()=>{ alert("Откроется меню для " + t.name); };
     container.appendChild(div);
   });
 }
@@ -167,6 +157,10 @@ document.getElementById('createUserBtn').addEventListener('click', ()=>{
   const pass = document.getElementById('newUserPass').value.trim();
   const role = document.getElementById('newUserRole').value;
   if(name && login && pass){
+    if(data.users.find(x=>x.username===login)){
+      alert("Пользователь с таким логином уже существует!");
+      return;
+    }
     data.users.push({username:login, password:pass, role:role});
     alert("Пользователь добавлен!");
     document.getElementById('newUserName').value="";

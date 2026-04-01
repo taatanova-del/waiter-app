@@ -5,25 +5,18 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <link rel="stylesheet" href="style.css">
 </head>
-<body onload="initTablePage()">
+<body onload="initTable()">
     <div class="container">
-        <!-- ВЕРХНЯЯ ЧАСТЬ: МЕНЮ -->
-        <div class="menu-upper">
-            <div style="display:flex; justify-content: space-between; align-items:center">
-                <h2 style="margin:0">Стол №<span id="tableNum"></span></h2>
-                <button class="btn btn-back" style="width:auto; margin:0" onclick="saveOrder()">Назад</button>
-            </div>
-            <hr>
+        <div class="top-section">
+            <h2 id="tableNum" style="margin:0 0 10px 0">Стол ...</h2>
             <div id="menuContent"></div>
         </div>
-
-        <!-- НИЖНЯЯ ЧАСТЬ: ЗАКАЗ -->
-        <div class="order-lower">
-            <h3 style="margin-top:0">Текущий заказ</h3>
-            <div id="orderList" style="max-height: 120px; overflow-y: auto; margin-bottom:10px"></div>
-            <div style="display:flex; gap:10px">
-                <button class="btn btn-save" onclick="saveOrder()">Сохранить</button>
-                <button class="btn btn-close" onclick="closeTable()">Оплатить</button>
+        <div class="bottom-section">
+            <h4 style="margin:0 0 10px 0">Заказ:</h4>
+            <div id="orderList" style="flex:1; overflow-y:auto;"></div>
+            <div style="display:flex; gap:10px;">
+                <button class="btn" style="background:#27ae60; color:white;" onclick="saveLocal()">Сохранить</button>
+                <button class="btn" style="background:#e74c3c; color:white;" onclick="closeTable()">Закрыть</button>
             </div>
         </div>
     </div>

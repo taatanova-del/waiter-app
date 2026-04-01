@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<title>Стол</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<header>
+  <button onclick="backToTables()">← К столам</button>
+</header>
+
+<h2 id="tableName"></h2>
+
+<div class="menu-container">
+  <div id="menuSections" class="menu-sections"></div>
+  <div id="orderContainer" class="order-container">
+    <h3>Заказ</h3>
+    <div id="orderItems"></div>
+    <button id="saveOrderBtn">Сохранить</button>
+    <button id="closeTableBtn">Закрыть стол</button>
+  </div>
+</div>
+
+<script src="script.js"></script>
+<script>
+let currentTable = JSON.parse(localStorage.getItem("currentTable"));
+if(!currentTable) window.location.href="main.html";
+document.getElementById("tableName").innerText = currentTable.name;
+
+async function renderMenu(){
+  await loadData();
+  const sections = document.getElementById("menuSections");
+  sections.innerHTML = "";
+  for(const cat in data.menu){
+    const catBtn = document.createElement("button");
+    catBtn.innerText = cat;
+    catBtn.onclick = () => renderItems(cat);
+    sections.appendChild(catBtn);
+  }
+}
+
+function renderItems(cat){
+  const container = document.getElementById("menuSections");
+  container.innerHTML = "";
+  data.menu[cat].forEach(item=>{
+    const div = document.createElement("div");
+    div.innerHTML = `
+      ${item} <button onclick="addToOrder('${item}')">+</button>
+    `;
+    container.appendChild(div);
+  });
+}
+
+let order = {...currentTable.items};
+function addToOrder(item){
+  if(order[item]) order[item]++;
+  else order[item]=1;
+  renderOrder();
+}
+
+function renderOrder(){
+  const container = document.getElementById("orderItems");
+  container.innerHTML = "";
+  for(const item in order){
+    const div = document.createElement("div");
+    div.innerHTML = `
+      ${item} 
+      <button onclick="changeQty('${item}',-1)">-</button>
+      ${order[item]}
+      <button onclick="changeQty('${item}',1)">+</button>
+    `;
+    container.appendChild(div);
+  }
+}
+
+function changeQty(item, delta){
+  order[item]+=delta;
+  if(order[item]<=0) delete order[item];
+  renderOrder();
+}
+
+// Сохранение заказа (без отправки на Google Sheet)
+document.getElementById("saveOrderBtn").onclick = ()=>{
+  currentTable.items = order;
+  const tables = data.tables.map(t => t.id===currentTable.id ? currentTable : t);
+  data.tables = tables;
+  localStorage.setItem("currentTable", JSON.stringify(currentTable));
+  window.location.href="main.html";
+}
+
+// Закрытие стола и отправка на Google Sheet
+document.getElementById("closeTableBtn").onclick = async ()=>{
+  const payload = [];
+  const now = new Date();
+  for(const cat in data.menu){
+    data.menu[cat].forEach(item=>{
+      if(order[item]) payload.push({
+        date: now.toLocaleDateString(),
+        time: now.toLocaleTimeString(),
+        table: currentTable.name,
+        section: cat,
+        item: item,
+        quantity: order[item]
+      });
+    });
+  }
+  await fetch(data.googleSheetEndpoint, {
+    method:"POST",
+    body: JSON.stringify(payload)
+  });
+  // очищаем стол
+  currentTable.items={};
+  window.location.href="main.html";
+}
+
+renderMenu();
+renderOrder();
+
+function backToTables(){ window.location.href="main.html"; }
+</script>
+</body>
+</html>

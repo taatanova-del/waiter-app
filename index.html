@@ -16,11 +16,15 @@
   .table-empty { background: beige; }
   .table-active { background: green; color: white; }
   .menu-block { border: 1px solid #ccc; border-radius: 10px; padding: 15px; margin: 10px 0; background: #fafafa; }
-  .menu-item, .order-item { display: flex; justify-content: space-between; margin: 5px 0; padding: 5px 10px; border-radius: 6px; background: #f0f0f0; }
+  .menu-item, .order-item { display: flex; justify-content: space-between; align-items: center; margin: 5px 0; padding: 5px 10px; border-radius: 6px; background: #f0f0f0; }
   .category-btn { margin: 3px; background: #8e44ad; color: white; }
   .category-btn:hover { background: #732d91; }
   .user-name { cursor: pointer; color: #4a90e2; font-weight: bold; }
   #order-section { margin-top: 10px; border: 1px solid #ccc; padding: 10px; border-radius: 8px; background: #f9f9f9; }
+  .order-controls { display: flex; align-items: center; gap: 5px; min-width: 80px; }
+  .order-controls button { width: 30px; height: 30px; padding: 0; font-size: 16px; line-height: 1; }
+  .order-controls span { width: 30px; text-align: center; display: inline-block; }
+  .order-item label { flex: 1; margin-right: 10px; }
 </style>
 </head>
 <body>
@@ -62,7 +66,7 @@
     <div id="order-section">
       <h4>Заказ:</h4>
       <div id="order-items"></div>
-      <button onclick="saveOrder()">✓</button>
+      <button onclick="saveOrder()">Сохранить</button>
       <button onclick="closeTable()">Закрыть стол</button>
     </div>
   </div>
@@ -98,7 +102,7 @@ let currentTable = null;
 function login() {
   const username = document.getElementById("username").value.trim();
   const password = document.getElementById("password").value.trim();
-  const user = data.users.find(u => u.username===username && u.password===password);
+  const user = data.users.find(u=>u.username===username && u.password===password);
   if(user){
     currentUser=user;
     document.getElementById("login-page").classList.add("hidden");
@@ -183,7 +187,13 @@ function renderOrderItems(){
   for(const item in currentTable.items){
     const itemDiv=document.createElement("div");
     itemDiv.className="order-item";
-    itemDiv.textContent=`${item}: ${currentTable.items[item]}`;
+
+    const label=document.createElement("label");
+    label.textContent=item;
+
+    const controls=document.createElement("div");
+    controls.className="order-controls";
+
     const minus=document.createElement("button");
     minus.textContent="-";
     minus.onclick=()=>{
@@ -191,21 +201,30 @@ function renderOrderItems(){
       if(currentTable.items[item]<=0) delete currentTable.items[item];
       renderOrderItems();
     };
+
+    const qty=document.createElement("span");
+    qty.textContent=currentTable.items[item];
+
     const plus=document.createElement("button");
     plus.textContent="+";
     plus.onclick=()=>{
       currentTable.items[item]+=1;
       renderOrderItems();
     };
-    itemDiv.appendChild(minus);
-    itemDiv.appendChild(plus);
+
+    controls.appendChild(minus);
+    controls.appendChild(qty);
+    controls.appendChild(plus);
+
+    itemDiv.appendChild(label);
+    itemDiv.appendChild(controls);
+
     div.appendChild(itemDiv);
   }
 }
 
-// Сохранить заказ кнопкой ✓
+// Сохранить заказ кнопкой
 function saveOrder(){
-  // Заказ уже в currentTable.items, просто возвращаемся на главную
   document.getElementById("table-page").classList.add("hidden");
   document.getElementById("main-page").classList.remove("hidden");
   renderTables();

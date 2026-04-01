@@ -3,18 +3,220 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Авторизация</title>
-<link rel="stylesheet" href="style.css">
-<script src="users.js"></script>
-<script src="app.js"></script>
+<title>Приложение для официанта</title>
+<style>
+  body { font-family: Arial, sans-serif; background: #f4f4f9; margin: 0; padding: 0; }
+  .container { max-width: 800px; margin: 20px auto; padding: 20px; background: #fff; border-radius: 10px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
+  input { width: 100%; padding: 10px; margin: 10px 0; border-radius: 6px; border: 1px solid #ccc; }
+  button { padding: 8px 15px; margin: 3px; border: none; border-radius: 6px; background: #4a90e2; color: white; cursor: pointer; }
+  button:hover { background: #357ABD; }
+  .hidden { display: none; }
+  .tables { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 15px; }
+  .table-btn { padding: 15px; border-radius: 8px; border: none; flex: 1; min-width: 100px; cursor: pointer; font-weight: bold; }
+  .table-empty { background: beige; }
+  .table-active { background: green; color: white; }
+  .menu-block, .order-block { border: 1px solid #ccc; border-radius: 10px; padding: 15px; margin: 10px; background: #fafafa; }
+  .table-layout { display: flex; gap: 15px; }
+  .menu-item, .order-item { display: flex; justify-content: space-between; margin: 5px 0; padding: 5px 10px; border-radius: 6px; background: #f0f0f0; }
+  .user-name { cursor: pointer; color: #4a90e2; font-weight: bold; }
+  .category-btn { margin: 3px; background: #8e44ad; }
+  .category-btn:hover { background: #732d91; }
+</style>
 </head>
 <body>
-  <div class="container" id="login-page">
-    <h2>Авторизация</h2>
-    <input type="text" id="username" placeholder="Логин">
-    <input type="password" id="password" placeholder="Пароль">
-    <button onclick="login()">Войти</button>
-    <p id="login-error" style="color:red;"></p>
+
+<!-- Авторизация -->
+<div class="container" id="login-page">
+  <h2>Авторизация</h2>
+  <input type="text" id="username" placeholder="Логин">
+  <input type="password" id="password" placeholder="Пароль">
+  <button onclick="login()">Войти</button>
+  <p id="login-error" style="color:red;"></p>
+</div>
+
+<!-- Главная страница -->
+<div class="container hidden" id="main-page">
+  <header>
+    <span id="user-display" class="user-name" onclick="goToProfile()"></span>
+  </header>
+  <h2>Столы</h2>
+  <div id="tables-panel" class="tables"></div>
+</div>
+
+<!-- Личный кабинет -->
+<div class="container hidden" id="profile-page">
+  <h2>Личный кабинет</h2>
+  <p>Имя: <span id="profile-name"></span></p>
+  <p>Должность: <span id="profile-role"></span></p>
+  <p>Логин: <span id="profile-username"></span></p>
+  <button onclick="backToMain()">Назад</button>
+</div>
+
+<!-- Страница стола -->
+<div class="container hidden" id="table-page">
+  <h2 id="table-name"></h2>
+  <div class="table-layout">
+    <div class="menu-block">
+      <h3>Меню</h3>
+      <div id="menu-categories"></div>
+      <div id="menu-items"></div>
+    </div>
+    <div class="order-block">
+      <h3>Заказ</h3>
+      <div id="order-items"></div>
+      <div>
+        <input type="checkbox" id="save-order" /> Сохранить заказ
+      </div>
+      <button onclick="closeTable()">Закрыть стол</button>
+    </div>
   </div>
+</div>
+
+<!-- JSON данные -->
+<script type="application/json" id="data-json">
+{
+  "users": [
+    {"name": "Татьяна", "username": "tatiana", "password": "1234", "role": "Официант"},
+    {"name": "Иван", "username": "ivan", "password": "abcd", "role": "Бармен"}
+  ],
+  "menu": {
+    "Безалкогольные напитки": ["Сок","Вода","Лимонад"],
+    "Алкогольные напитки": ["Пиво","Вино","Водка"],
+    "Десерты": ["Торт","Мороженое","Пирожное"]
+  },
+  "tables": [
+    {"id":1,"name":"Стол 1","items":{}},
+    {"id":2,"name":"Стол 2","items":{}},
+    {"id":3,"name":"Стол 3","items":{}}
+  ]
+}
+</script>
+
+<script>
+let data = JSON.parse(document.getElementById("data-json").textContent);
+let currentUser = null;
+let currentTable = null;
+
+// Авторизация
+function login() {
+  const username = document.getElementById("username").value.trim();
+  const password = document.getElementById("password").value.trim();
+  const user = data.users.find(u => u.username === username && u.password === password);
+  if(user){
+    currentUser = user;
+    document.getElementById("login-page").classList.add("hidden");
+    document.getElementById("main-page").classList.remove("hidden");
+    document.getElementById("user-display").textContent = user.name;
+    renderTables();
+  } else {
+    document.getElementById("login-error").textContent = "Неверный логин или пароль";
+  }
+}
+
+// Главная страница
+function renderTables() {
+  const panel = document.getElementById("tables-panel");
+  panel.innerHTML = "";
+  data.tables.forEach(table => {
+    const btn = document.createElement("button");
+    btn.textContent = table.name;
+    btn.className = Object.keys(table.items).length ? "table-btn table-active" : "table-btn table-empty";
+    btn.onclick = () => openTable(table.id);
+    panel.appendChild(btn);
+  });
+}
+
+// Переход к столу
+function openTable(tableId){
+  currentTable = data.tables.find(t => t.id===tableId);
+  document.getElementById("main-page").classList.add("hidden");
+  document.getElementById("table-page").classList.remove("hidden");
+  document.getElementById("table-name").textContent = currentTable.name;
+  renderMenuCategories();
+  renderOrderItems();
+}
+
+// Меню
+function renderMenuCategories() {
+  const catDiv = document.getElementById("menu-categories");
+  catDiv.innerHTML = "";
+  for(const cat in data.menu){
+    const btn = document.createElement("button");
+    btn.textContent = cat;
+    btn.className = "category-btn";
+    btn.onclick = ()=> showMenuItems(cat);
+    catDiv.appendChild(btn);
+  }
+}
+
+function showMenuItems(category) {
+  const itemsDiv = document.getElementById("menu-items");
+  itemsDiv.innerHTML = "";
+  data.menu[category].forEach(item=>{
+    const div = document.createElement("div");
+    div.className = "menu-item";
+    div.textContent = item;
+    div.onclick = ()=> addItemToOrder(item);
+    itemsDiv.appendChild(div);
+  });
+}
+
+// Заказ
+function addItemToOrder(item){
+  if(!currentTable.items[item]) currentTable.items[item]=1;
+  else currentTable.items[item]+=1;
+  renderOrderItems();
+}
+
+function renderOrderItems(){
+  const div = document.getElementById("order-items");
+  div.innerHTML="";
+  for(const item in currentTable.items){
+    const itemDiv = document.createElement("div");
+    itemDiv.className="order-item";
+    itemDiv.textContent = `${item}: ${currentTable.items[item]}`;
+    const minus = document.createElement("button");
+    minus.textContent="-";
+    minus.onclick = ()=>{
+      currentTable.items[item]-=1;
+      if(currentTable.items[item]<=0) delete currentTable.items[item];
+      renderOrderItems();
+    };
+    const plus = document.createElement("button");
+    plus.textContent="+";
+    plus.onclick = ()=>{
+      currentTable.items[item]+=1;
+      renderOrderItems();
+    };
+    itemDiv.appendChild(minus);
+    itemDiv.appendChild(plus);
+    div.appendChild(itemDiv);
+  }
+}
+
+// Закрыть стол
+function closeTable(){
+  const save = document.getElementById("save-order").checked;
+  if(!save) currentTable.items = {};
+  document.getElementById("table-page").classList.add("hidden");
+  document.getElementById("main-page").classList.remove("hidden");
+  renderTables();
+}
+
+// Личный кабинет
+function goToProfile(){
+  document.getElementById("main-page").classList.add("hidden");
+  document.getElementById("profile-page").classList.remove("hidden");
+  document.getElementById("profile-name").textContent = currentUser.name;
+  document.getElementById("profile-role").textContent = currentUser.role;
+  document.getElementById("profile-username").textContent = currentUser.username;
+}
+
+function backToMain(){
+  document.getElementById("profile-page").classList.add("hidden");
+  document.getElementById("main-page").classList.remove("hidden");
+}
+</script>
+
 </body>
 </html>
